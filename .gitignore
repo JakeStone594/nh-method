@@ -1,0 +1,97 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# THIS REPOSITORY IS PUBLIC. A mistake here is not recoverable by deletion —
+# what was cloned, cached or indexed stays cloned, cached and indexed.
+#
+# The content directories are therefore DENY-BY-DEFAULT with named exceptions.
+# A denylist is the wrong shape for a public tree: it protects against the leak
+# classes you thought of, and a new file is published by `git add -A` unless
+# somebody remembered to name it. An allowlist fails closed — a new document is
+# invisible to git until it is deliberately added here, which is a decision
+# somebody has to make rather than one they have to remember not to forget.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Content directories: deny by default, allow by name ─────────────────────
+# Note `dir/*` and not `dir/` — git cannot re-include a file whose parent
+# directory is excluded, so the exceptions below would never be reachable.
+method/*
+!method/LYING-PROBES.md
+!method/TOOL-TEST-METHOD.md
+!method/CODING-RULES.md
+
+contract/*
+!contract/RULES.md
+!contract/REGRESSION.md
+
+bin/*
+!bin/bpffs-mount
+!bin/dbus-start
+!bin/androute
+!bin/android-browser
+!bin/catch-boot-warn
+
+lib/*
+!lib/common.sh
+
+scripts/*
+!scripts/scan-secrets.sh
+
+# ── Never commit anything from an engagement ────────────────────────────────
+# Belt and braces: the allowlist above already excludes these, but engagement
+# output is the class where a single miss is worst, and it is cheap to say twice.
+*.pcap
+*.pcapng
+*.cap
+*.hc22000
+*.22000
+*.potfile
+*.hccapx
+SortedEssid*
+Captures/
+captures/
+loot/
+results/
+handshakes/
+
+# ── Credentials and keys ────────────────────────────────────────────────────
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.ovpn
+wpa_supplicant*.conf
+hostapd*.conf
+dnsmasq*.conf
+.env
+*_API.txt
+*api_key*
+*token*
+
+# ── Runtime and device state — none of this is source ───────────────────────
+*.pid
+*.rec
+*.log
+state
+state.torn-down
+snapshot.json
+last-compose.json
+run/
+var/
+
+# ── Local scratch ───────────────────────────────────────────────────────────
+# ⛔ `*.bak` matches `X.bak` and NOT `X.bak.<date>`, and a DATED suffix is the
+# parent project's own backup convention — measured there with `git check-ignore`,
+# where `TOOLS.md.bak` was ignored and `TOOLS.md.bak.2026-08-17` was not. The `*`
+# suffixes below are load-bearing, not tidiness.
+*.orig
+*.bak
+*.bak.*
+*.rej
+*.save
+*.pre-*-fix-*
+*~
+*.swp
+.DS_Store
+__pycache__/
