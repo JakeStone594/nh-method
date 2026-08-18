@@ -478,10 +478,14 @@ number until the move lands. Patching one tier while copying the other is exactl
   2026-08-11 after a `git checkout` intended to discard a temporary change **reverted uncommitted
   work in the same file**. `git checkout -- <path>` restores the whole path from the index; it has
   no notion of "only the bit I was experimenting with", and the loss is silent and unrecoverable.
-- ⚠ **Editing a T1 doc breaks the `nh-tools` repo mirror (BT-0.10) until it is committed.** Four
-  T1 docs are mirrored byte-for-byte alongside `bin/` and `lib/` — `CODING-RULES.md`
-  `PRECONDITIONS.md` `TOOL-BACKLOG.md` `TOOL-TEST-METHOD.md` — so a doc-only curation pass can
-  violate the invariant without touching a tool. (`TOOLS.md` and `TOOL-TEST-RESULTS.md` are
+- ⚠ **Editing a T1 doc breaks the `nh-tools` repo mirror (BT-0.10) until it is committed.** A
+  **named subset** of T1 docs is mirrored byte-for-byte alongside `bin/` and `lib/`, so a
+  doc-only curation pass can violate the invariant without touching a tool. ⛔ **The repo's own
+  `.gitignore` OWNS that set and its count — `grep '^!docs/' /root/tools/nh-tools/.gitignore` —
+  and it GROWS: it read `four` here, in `LAYOUT.md` and twice in T2 `nh-tools-repo` until
+  2026-08-18, by which time it was six** (`CORRECTIONS.md` 2026-08-18). **Do not act on a
+  remembered list; run the grep** — a curator who edits a doc this bullet does not name will
+  drift the mirror believing they have not. (`TOOLS.md` and `TOOL-TEST-RESULTS.md` are
   **gitignored** and must stay so; their repo-side copies are stale by design and reporting them
   as DRIFT is correct, not a defect to "fix" by copying them in.)
 - ⛔ **THIS CONTRACT IS NOW MIRRORED TOO, AND THAT MAKES COMPLIANCE ITSELF DRIFT THE REPO.** Added

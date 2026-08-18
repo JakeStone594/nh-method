@@ -780,3 +780,29 @@ supposed to grow.
     the wrong tree, and that the model/board/codename probe runs **only** under `--public`.
     `PRECONDITIONS.md` P-78; `TOOL-BACKLOG.md` G-17; T2 `nh-method-repo` and `nh-tools-repo`;
     `CORRECTIONS.md` 2026-08-18.
+
+### Added 2026-08-18 (the repository object — the artefact no file gate reads)
+
+93. `scan-secrets.sh --public` exited **0** on the tree you are about to publish. **Have you
+    checked everything that publishes?** — the sibling of **Q92**, which settles the *input set*
+    (files, then files + history). This one settles the *artefact*: **a repository is not only a
+    tree.** ⛔ **Name, description and topics live in the forge's API, in NO commit, so no
+    file-content probe can ever reach them** — measured 2026-08-18 with
+    `gh repo list --json name,description,repositoryTopics`: one private repo's **description**
+    names the handset model, and a second private repo's **name** carries the model and the SoC.
+    ⚠ **And they do not publish on a push — they publish on a VISIBILITY FLIP**, so the pre-push
+    gate is the wrong *moment* as well as the wrong instrument, and a description survives being
+    copied into a new repo. ⛔ **The second half is the one a careful reader will not expect: the
+    gate SKIPS TWO FILES BY DESIGN** — itself and `.gitignore`, citing the `pkill -f` self-match
+    family — **and those are exactly the two that must carry device-identifying literals to do
+    their job** (the `--public` probe's own pattern list enumerates board, SoC and model family;
+    the ignore rules carry the model as a glob). **So the least-scanned file in a public tree is
+    the densest identity string in it.** ⚠ **The exemption is CORRECT and an answer that proposes
+    removing it fails** — what is wrong is the conclusion drawn from a green run. ⚠ **An answer
+    that reaches for the gate, or proposes another probe inside it, is the state this question
+    exists to catch**: the honest move is to **enumerate what the gate did not read** — a
+    `gh repo view --json name,description,repositoryTopics`, plus the script's own self-exempt
+    list — and judge those by hand. ⚠ **Scope: these are MODEL-WIDE identifiers, not per-unit, and
+    whether they are acceptable is an operator decision** — there is a precedent for keeping a
+    model-wide string in a non-published file and none for keeping one in a public tree.
+    `PRECONDITIONS.md` **P-79**; `TOOL-BACKLOG.md` G-17.
