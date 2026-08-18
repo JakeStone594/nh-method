@@ -757,3 +757,26 @@ supposed to grow.
     Q90's shape and was found by it**: the correction reached T1 (`INSTALLED.md`, `BLUETOOTH.md`) and
     stopped, leaving T0 and **four skill-tier sites** asserting the absolute in the present tense —
     in the tier that loads ahead of T1. `INSTALLED.md` §*USB Wi-Fi adapters*; `BLUETOOTH.md`.
+
+### Added 2026-08-18 (the second repository — and it is public)
+
+92. `scan-secrets.sh` exited **0, clean**, and `cmp` says one file in the repo differs from its
+    device original. **Are you clear to push, and should you sync that file?** — added because the
+    answer is **no to both**, and each half fails in the direction that publishes device identity.
+    ⛔ **There are TWO repos and their invariants are OPPOSITE.** The private one is a
+    **byte-identical mirror** of the device (BT-0.10); the public one is a **curated derivative**,
+    and exactly one file is deliberately short — the contract's regression checklist, with its one
+    identity-carrying question removed, leaving a visible gap in the numbering. **A `cmp` sweep
+    reports that as DRIFT and the reflex fix copies the identity straight into a public tree.**
+    ⚠ **An answer that reaches for the four-root `cmp` loop is the state this question exists to
+    catch** — that loop is scoped to the private mirror and is the wrong instrument here; the
+    numbering gap is the tell, not a defect to close.
+    ⛔ **The second half is the gate.** A green run is a statement about **the bytes the gate was
+    handed**, never about the artefact git will publish: until 2026-08-18 it built its input from
+    `git ls-files` alone and **had never read a commit message**, while the private repo's root
+    commit subject names the handset — so every green run for the life of that repo certified a tree
+    containing it. A correct answer knows the input set is the question, that `.gitignore` is an
+    input to it, that the script resolves its root from `$0` so the wrong copy reports cleanly about
+    the wrong tree, and that the model/board/codename probe runs **only** under `--public`.
+    `PRECONDITIONS.md` P-78; `TOOL-BACKLOG.md` G-17; T2 `nh-method-repo` and `nh-tools-repo`;
+    `CORRECTIONS.md` 2026-08-18.

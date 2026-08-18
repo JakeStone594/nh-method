@@ -40,7 +40,12 @@ tie-break: where a previous pass would have cut a useful trap or a load-bearing 
 
 **It is a tier, it loads ahead of T1, and it was ungoverned by this contract until this date.**
 Every skill *description* is in context at session start; a *body* is injected wholesale on invoke.
-~1.8 MB. ⚠ **`~/.claude/skills/INDEX.md` owns the skill and file counts; do not restate them here** — this line carried "23 skills, 99 `.md` files" until 2026-08-15, when the true figures were 24 and 100. Audited 2026-08-10: **0 of 113 files referenced `/root/docs/`**
+**Size: state the instrument or do not state the number.** Measured 2026-08-18 — `du -sb`
+(apparent) **1,383,426 B**, `du -sh` (block-allocated) **1.8 M**, `.md` bodies alone **1,244,569 B**;
+the ~30 % gap is block allocation, not drift. ⚠ **This line read a bare *"~1.8 MB"* until then and
+was taken for a contradiction against `INDEX.md`'s ~1.37 MB — it was two honest instruments and
+neither named itself** (`CORRECTIONS.md` 2026-08-18). **For what this section asks — the context
+cost — the apparent size is the honest one; re-derive it rather than quoting any of these.** ⚠ **`~/.claude/skills/INDEX.md` owns the skill and file counts; do not restate them here** — this line carried "23 skills, 99 `.md` files" until 2026-08-15, when the true figures were 24 and 100. Audited 2026-08-10: **0 of 113 files referenced `/root/docs/`**
 while 68 referenced `CLAUDE.md`, nine `/usr/local/bin` wrappers were mentioned nowhere, and two
 files **instructed the model to volunteer a refusal of USB HID** — the exact refusal T0's 2026-08-06
 correction exists to prevent, live for four days in a tier that arrives before any T1 file is
