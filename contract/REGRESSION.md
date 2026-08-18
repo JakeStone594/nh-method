@@ -806,3 +806,14 @@ supposed to grow.
     whether they are acceptable is an operator decision** — there is a precedent for keeping a
     model-wide string in a non-published file and none for keeping one in a public tree.
     `PRECONDITIONS.md` **P-79**; `TOOL-BACKLOG.md` G-17.
+    ⚠ **UPDATED THE SAME DAY — THE DECISION NOW EXISTS, AND IT DOES NOT RETIRE THIS
+    QUESTION.** The operator **accepted** the model-wide identifiers in the private
+    repositories' metadata as they stand — ⛔ **they are not to be changed; a rename breaks
+    the remote of every clone** — **conditional on those repositories remaining private**,
+    which is exactly the condition this question says does not survive a **visibility
+    flip**. ⛔ **So the enumeration still runs.** The acceptance covers the set that was
+    judged: not a new repository, not a description copied into one, and not the public
+    tree's self-exempt file. ⚠ **An answer that cites the decision INSTEAD of enumerating
+    is the state this update exists to catch** — a settled judgement about one set is not a
+    probe of the next. Nothing about per-unit identity is relaxed. T2
+    `repo-object-identity-accepted`.
