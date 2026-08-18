@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+#
+# dbus-start — bring up the D-Bus system bus in a NetHunter chroot.
+#
+# Usage: dbus-start [start|stop|restart|status]
+set -uo pipefail
+
+RUNDIR=/run/dbus
+PIDFILE="$RUNDIR/pid"
+SOCKET="$RUNDIR/system_bus_socket"
+DAEMONUSER=messagebus
+
+GREEN=$'\033[32;1m'; RED=$'\033[31;1m'; YELLOW=$'\033[33;1m'; RESET=$'\033[0m'
+
+# --------------------------------------------------------------- presentation --
+# RENDERING ONLY. No probe, no branch and no exit code reads any of this.
+exec 9>&1
+if [ -t 9 ]; then
+  _COLS=$(stty size <&9 2>/dev/null | awk '{print $2}')
+  case "$_COLS" in ''|0|*[!0-9]*) _COLS=$(tput cols 2>/dev/null) ;; esac
+else
+  _COLS=80                   # not a terminal: FIXED, so a redirected run is reproducible
+fi
+exec 9>&-
+case "$_COLS" in ''|0|*[!0-9]*) _COLS=80 ;; esac
+[ "$_COLS" -lt 36  ] && _COLS=36
+[ "$_COLS" -gt 100 ] && _COLS=100
+
+# Wrap PROSE. $1 = first-line indent, $2 = continuation indent, both in VISIBLE
+# columns so a coloured marker never skews the count. A shell command is never
+# passed through here: a wrapped command is not copy-pasteable.
+_wrap() {
+  local i1=$1 i2=$2; shift 2
+  printf '%s\n' "$*" | awk -v w="$_COLS" -v i1="$i1" -v i2="$i2" '
+    function sp(n,  s) { s=""; while (n-- > 0) s = s " "; return s }
+    { line=""; pre=sp(i1)
+      for (i=1; i<=NF; i++) {
+        cand = (line=="" ? pre $i : line " " $i)
+        if (length(cand) > w && line != "") { print line; pre=sp(i2); line=pre $i }
+        else line=cand
+      }
+      print (line=="" ? pre : line) }'
+}
+
+# A marker line whose continuations hang UNDER the marker, not at column 0.
+_mark() {  # $1 colour ('' for none), $2 visible marker, rest = text
+  local col=$1 mk=$2; shift 2
+  local pw=${#mk} n=0 l
+  while IFS= read -r l; do
+    if [ "$n" -eq 0 ]; then printf '%s%s%s%s\n' "$col" "$mk" "${l:pw}" "$RESET"
+    else                    printf '%s%s%s\n'   "$col" "$l"  "$RESET"; fi
+    n=1
+  done < <(_wrap "$pw" "$pw" "$*")
+}
+say()   { _mark "$GREEN"  '→ ' "$@"; }
+warn()  { _mark "$YELLOW" '→ ' "$@"; }
+err()   { _mark "$RED"    '→ ' "$@"; }
+plain() { _mark ""        '→ ' "$@"; }
+
+# Two-column rows read from stdin as  label<TAB>text.  The label column width is
+# DERIVED from the longest label actually present — never declared — so adding a
+# longer verb later cannot silently shatter the alignment. When two columns would
+# leave less than _MINDESC for the text, rows STACK instead of overflowing.
+_MINDESC=24
+_rows() {
+  local -a K V L; local k v i j n=0 kw=0 head
+  while IFS=$'\t' read -r k v; do
+    [ -z "$k$v" ] && continue
+    K[n]=$k; V[n]=$v; [ "${#k}" -gt "$kw" ] && kw=${#k}; n=$((n+1))
+  done
+  if [ $((_COLS - kw - 5)) -ge "$_MINDESC" ]; then
+    for ((i=0; i<n; i++)); do
+      if [ -z "${V[i]}" ]; then printf '  %s\n' "${K[i]}"; continue; fi
+      printf -v head '  %-*s   ' "$kw" "${K[i]}"
+      mapfile -t L < <(_wrap "${#head}" "${#head}" "${V[i]}")
+      printf '%s%s\n' "$head" "${L[0]:${#head}}"
+      for ((j=1; j<${#L[@]}; j++)); do printf '%s\n' "${L[j]}"; done
+    done
+  else
+    for ((i=0; i<n; i++)); do
+      printf '  %s\n' "${K[i]}"
+      [ -n "${V[i]}" ] && _wrap 6 6 "${V[i]}"
+    done
+  fi
+}
+
+# Literal command lines are NEVER wrapped. The trailing note drops to its own
+# line when it would not fit; the command itself always stays on one line.
+_cmds() {  # stdin:  command<TAB>note
+  local -a C N; local c t i n=0 cw=0
+  while IFS=$'\t' read -r c t; do
+    [ -z "$c$t" ] && continue
+    C[n]=$c; N[n]=$t; [ "${#c}" -gt "$cw" ] && cw=${#c}; n=$((n+1))
+  done
+  for ((i=0; i<n; i++)); do
+    if [ -z "${N[i]}" ]; then printf '  %s\n' "${C[i]}"
+    elif [ $((2 + cw + 3 + 2 + ${#N[i]})) -le "$_COLS" ]; then
+      printf '  %-*s   # %s\n' "$cw" "${C[i]}" "${N[i]}"
+    else
+      printf '  %s\n' "${C[i]}"; _wrap 6 8 "# ${N[i]}"
+    fi
+  done
+}
+_sec()   { printf '\n%s\n' "$1"; _PARA=0; }
+_PARA=0
+_prose() { [ "$_PARA" = 1 ] && printf '\n'; _PARA=1; _wrap 2 2 "$@"; }
+
+usage() {
+  _wrap 0 2 "dbus-start — start the D-Bus system bus, which cannot start itself in this chroot."
+
+  _sec USAGE
+  printf '  %s\n\n' "dbus-start [verb]"
+  _prose "With no verb at all it STARTS the bus."
+
+  _sec VERBS
+  _rows <<EOF
+start	bring the system bus up. This is also what runs when you give no verb
+status	is the bus up and answering a live query? Read-only
+stop	stop the bus, then clear its pidfile and socket
+restart	stop, then start
+EOF
+
+  _sec OPTIONS
+  _rows <<EOF
+-h, --help	this screen
+EOF
+
+  _sec CHAIN
+  _prose "Bluetooth work on this phone runs in a fixed order, and this bus is first: bluetoothd cannot reach the system bus without it, and nothing in the chroot starts it for you."
+  _prose "Next comes bluebinder-start, which is the only way an hci0 exists at all. Turn Android's own Bluetooth OFF before that — the Qualcomm HAL allows a single HCI client. Then badbt to become a keyboard, or btinject to attack one."
+  _prose "You rarely run this by hand: bluebinder-start starts the bus itself when it is missing, and so does badbt up."
+
+  _sec "TYPICAL RUN"
+  _cmds <<EOF
+dbus-start status	already up?
+dbus-start	start it
+bluebinder-start	then the HAL proxy, for an hci0
+badbt status	then check the BadBT preconditions
+EOF
+
+  _sec COST
+  _prose "start is cheap and touches nothing outside this chroot."
+  _prose "stop tears the bus down for every client in the chroot at once — bluetoothd and btk_server included — so a live badbt session dies with it."
+
+  _sec "SEE ALSO"
+  _rows <<EOF
+bluebinder-start	get an hci0 at all; starts this bus itself if it is missing
+badbt	BadBT / HID-Device front end; needs this bus
+btinject	attacker-initiated HID injection; needs no bus at all
+EOF
+}
+
+# PID of a genuinely live system bus, or empty.
+live_pid() {
+  local p
+  p="$(pgrep -x dbus-daemon 2>/dev/null | head -1)"
+  [ -n "$p" ] && printf '%s' "$p"
+}
+
+# Remove pid/socket only when nothing is actually listening.
+clear_stale() {
+  [ -e "$PIDFILE" ] || [ -S "$SOCKET" ] || return 0
+  warn "clearing stale pidfile/socket from an ungraceful shutdown"
+  rm -f -- "$PIDFILE" "$SOCKET"
+}
+
+do_status() {   # $1 = "hint" -> add the next-command line when down
+  local p
+  p="$(live_pid)"
+  if [ -n "$p" ] && dbus-send --system --dest=org.freedesktop.DBus \
+       /org/freedesktop/DBus org.freedesktop.DBus.ListNames >/dev/null 2>&1; then
+    say "system bus up (pid $p), responding"
+    return 0
+  fi
+  if [ -n "$p" ]; then
+    err "dbus-daemon running (pid $p) but NOT responding"
+    [ "${1:-}" = hint ] && warn "next: dbus-start restart"
+    return 1
+  fi
+  err "system bus down"
+  [ "${1:-}" = hint ] && warn "next: dbus-start"
+  return 1
+}
+
+do_stop() {
+  local p
+  p="$(live_pid)"
+  if [ -z "$p" ]; then
+    plain "not running"
+  else
+    kill "$p" 2>/dev/null      # SIGTERM: dbus-daemon cleans up pid+socket itself
+    for _ in {1..10}; do [ -n "$(live_pid)" ] || break; sleep 0.3; done
+    [ -n "$(live_pid)" ] && kill -9 "$p" 2>/dev/null
+    plain "stopped"
+  fi
+  clear_stale
+}
+
+do_start() {
+  if [ -n "$(live_pid)" ]; then
+    plain "already running"; do_status; return $?
+  fi
+
+  install -d -o "$DAEMONUSER" -g "$DAEMONUSER" -m 755 "$RUNDIR"
+  clear_stale
+
+  if ! dbus-daemon --system 2>&1 | grep -v 'Unknown username'; then :; fi
+
+  for _ in {1..10}; do [ -S "$SOCKET" ] && break; sleep 0.3; done
+  do_status
+}
+
+case "${1:-start}" in
+  start)   do_start ;;
+  stop)    do_stop ;;
+  restart) do_stop; sleep 0.5; do_start ;;
+  status)  do_status hint ;;
+  -h|--help|help) usage ;;
+  --help-full)    echo "dbus-start: there is one help screen: dbus-start --help" >&2; exit 1 ;;
+  *) echo "Usage: dbus-start [start|stop|restart|status]" >&2; exit 3 ;;
+esac
