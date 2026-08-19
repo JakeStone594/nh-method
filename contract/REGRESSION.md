@@ -11,6 +11,15 @@ An unanswerable question **blocks the change**. Do not proceed and "fix it later
 For each question: read T0 only. If T0 answers it, PASS. If T0 names a T1 file that answers it,
 PASS. If you need two hops, a search, or prior knowledge from this conversation, **FAIL**.
 
+⛔ **READ T0 FROM DISK, NOT FROM YOUR DELIVERED CONTEXT — added 2026-08-19.** If you are a
+**subagent**, the T0 in your context is the **parent's session-start snapshot** and can be hours
+stale (`CLAUDE-HARNESS.md` §2.1). Measured that day: an inherited T0 was missing
+§*Scope and authorization* **entirely** while it had been on disk since the small hours — so scoring
+**Q95** from context would have manufactured a FAIL on a section that is present, or licensed
+"correcting" this file. `cat /root/CLAUDE.md` costs nothing and is the whole remedy. ⚠ **The
+inverse is not safe either**: for a fresh parent the inherited copy *is* disk-current, so this is a
+question to answer, not a default to assume.
+
 Answering from memory of the pre-split file is the failure mode this checklist exists to catch —
 be strict about it.
 
@@ -863,3 +872,21 @@ supposed to grow.
     handling rules, and merging the two fails it**: handling and permission are different claims,
     and a handling section can be complete and detailed for months while the permission question
     goes unwritten.
+96. A subagent quoted `MEMORY.md`'s index line — or a T0 section — back from its context with no
+    tool call, exactly as asked. **Is that the current corpus?** — added because the answer is **no
+    by default**: **inherited context is the parent's SESSION-START SNAPSHOT**, while the same
+    agent's **tool reads** are current, so one agent can hold two mutually inconsistent views of one
+    file and be right about neither without saying which it used. Measured 2026-08-19, twice, on two
+    files: a subagent dispatched **after** two `MEMORY.md` rewrites returned the pre-rewrite line
+    byte-for-byte, and the curator's own inherited T0 lacked §*Scope and authorization* ~8 h after it
+    was written. ⛔ **A correct answer names the consequence for THIS checklist** — scoring it from
+    inherited context manufactures a false FAIL on **Q95** — **and refuses the inverse**: inherited
+    context is not reliably *stale* either, since a fresh parent's copy is disk-current. ⚠ **An
+    answer that reaches for a subagent as an observer of a recent edit is the state this question
+    exists to catch**: that was `H-14`'s named cheap probe for a canary armed mid-session, and the
+    observer complied perfectly and reported the pre-edit bytes. ⚠ **The instruction failed in the
+    direction that costs most — it recruited a careful reader's discipline**, which is why it is
+    filed as a stale *instruction*, not a stale fact. Same family as **Q83/Q84/Q85**: the instrument
+    works perfectly and answers a **different** question — here, *"what was true when my parent
+    started?"* `CLAUDE-HARNESS.md` §2.1 (mechanism), §3.1 (the T0 half, which PASSED), `H-14` and
+    `H-15`; `CORRECTIONS.md` 2026-08-19 *"the canary's own observation channel"*.
