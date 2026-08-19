@@ -23,6 +23,66 @@ question to answer, not a default to assume.
 Answering from memory of the pre-split file is the failure mode this checklist exists to catch —
 be strict about it.
 
+⛔ **SCORE AGAINST WHITESPACE-NORMALISED TEXT, NEVER LINE-SCOPED — added 2026-08-19.** T0 is
+hard-wrapped, so an anchor phrase routinely straddles a newline and a line-bounded `grep` cannot see
+it. ⛔ **This one fails CLOSED:** the question scores CHECK or FAIL on a corpus that is clean, this
+file's own opening says an unanswerable question **blocks the change**, and the next reader is sent
+to edit a sound T0 to satisfy a probe that never ran. ⭐ **It is Q76's documented trap arriving in
+the SCORER instead of the corpus, and the direction inverts** — there a wrapped *pointer* goes
+unfound and a defect passes; here a wrapped *anchor* goes unfound and correct content is condemned.
+
+**The form. Verified on-device 2026-08-19** by single-variable A/B on three anchors that wrap in T0
+(`NEVER EXITS`, `collapses the magic symlink`, `y/m/n tables for 10 domains` — examples, re-derive if
+they have moved): line-scoped returned **0 hits, rc 1** on all three, under the **bare** `grep` and
+`/usr/bin/grep` alike; the pipeline below returned **1 hit, rc 0** on all three.
+
+```bash
+tr '\n' ' ' < /root/CLAUDE.md | tr -s ' ' | /usr/bin/grep -coF '<anchor phrase>'
+```
+
+⚠ **After normalising, the file is ONE line, so `-c` saturates at 1** — that is exactly what a
+presence test wants, but it is not a count. For occurrences use `… | /usr/bin/grep -oF '<anchor>' | wc -l`
+(measured the same day: `con_mode` → `-c` **1**, occurrences **11**, unnormalised line count **10**).
+⚠ **`grep -z` is NOT a substitute** — it makes the file one record, but a literal space in your
+pattern still will not match a newline (`NEVER EXITS` under `-z` → **0 hits**); it works only if you
+already know where the wrap falls, which is the thing you do not know. **`pcregrep -M` is not
+installed here** (checked the same day). `perl -0777 -ne` is the fallback when a real multiline regex
+is genuinely needed.
+
+⛔ **AND `-F` IS NOT OPTIONAL.** T0 is dense with markdown bold markers and bracketed literals, so an
+anchor copied out of it is a *pattern* unless you say otherwise. Same symptom, second cause, and it
+fails in **both** directions — measured 2026-08-19 on this T0:
+
+- **Did not run.** An anchor **opening** with a markdown bold marker is rejected by the **bare**
+  `grep` — `empty (sub)expression`, **rc 2** — while `/usr/bin/grep` matches it as a BRE and `-E`
+  matches it with two `* at start of expression` warnings. ⚠ **So switching binaries HIDES this
+  rather than settling it**, and a mid-string marker is tolerated by all three, which is what makes
+  the failure look arbitrary.
+- **False PASS.** A bracketed anchor is read as a **character class**: `[warn]` matched **1102**
+  lines against **3** with `-F`. The scorer greps it, gets a hit, and records a PASS having tested
+  nothing. *(Both figures are a dated measurement of a ratio, not a live property — they move with
+  every T0 edit.)*
+
+⛔ **SO A CHECK OR A FAIL FROM A LINE-SCOPED OR UNESCAPED PROBE MEANS *DID NOT RUN*, NOT *ABSENT*.**
+Re-probe normalised **and** fixed-string before scoring, and read the passage before writing a
+verdict. Same family as `PRECONDITIONS.md` **N-62** (a `grep` rc ≥ 2 is *did not run*, never *no
+match*) and **P-81** (a shadowed binary's exit status taken as the answer) — those rows own the
+mechanism and the measurements and are not restated here. ⚠ **Note the direction, because it is
+opposite: P-81 fails toward a CLEAN bill of health, this fails toward a FALSE REGRESSION.**
+
+⚠ **IT RECURRED, WHICH IS WHY IT IS A METHOD CLAUSE AND NOT A NOTE.** Three passes on the record
+across two days — **2026-08-18-21-37-04** (Q71), **2026-08-19-10-49-48** (Q92), and
+**2026-08-19-12-52-59** (Q28, Q33, Q36, Q77, Q82, Q88, Q93) — **nine questions** scored wrong on a
+wrapped anchor, plus **Q2** on the markup cause. ⛔ **All ten were caught by the scorer's own
+re-read, and that is NOT a control you may rely on**: it depends on a curator electing to re-read a
+CHECK instead of banking it, the wrong verdict is silent and plausible, and it is indistinguishable
+from a real regression until someone looks. ⚠ **A FOURTH INSTANCE OCCURRED WHILE THIS CLAUSE
+WAS BEING WRITTEN**: a `sed` range whose end anchor wraps in *this* file ran silently to EOF and
+printed an unrelated diff as the answer. **The defect survives being understood** — which is
+exactly why the remedy has to be a typed form and not an intention. ⛔ **No question was at fault in
+any of the ten — the corpus was clean each time and the instrument was not. Do not edit a question
+to make a probe match it.**
+
 ## The questions
 
 ### Traps that cause wrong actions (these must be answerable from T0 alone)
