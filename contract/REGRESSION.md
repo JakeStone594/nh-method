@@ -359,6 +359,12 @@ supposed to grow.
     **FAIL**, and a hit in prose (a price, an `awk '{print $1}'`) is a defect to escape. Added
     because bodies are `$N`-substituted with the **caller's arguments** at invoke time and **no file
     read reveals it** — the corruption exists only in the delivered context.
+    ⚠ **The `--include=SKILL.md` scope is DELIBERATE and now MEASURED — do not widen it to
+    `references/`.** A reference is a **pointer, not injected content**: it never enters the
+    invoke-time substitution path and arrives only via a `Read`, which returns disk bytes
+    (`CLAUDE-HARNESS.md` `H-16`, closed 2026-08-19). **Nine lines across four reference files
+    carry a literal `$<digit>` today and need NO action**; widening the glob turns all nine into
+    FAILs on a clean corpus — the Q58 shape.
 61. **`am start …` printed `app_process: inaccessible or not found`. Is `am` missing, and will
     fixing `PATH` help?** — added because the answer is **no** to both, and the message is a decoy:
     20 `/system/bin` wrappers are shell scripts that `exec app_process`, and `app_process` cannot
