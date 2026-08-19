@@ -87,6 +87,19 @@ adds is not a rewrite.
 A tool that changes global state puts it back — on error, on Ctrl-C, on SIGTERM. That
 is a trap and a restore function, not a paragraph about a teardown contract.
 
+**No trap covers `SIGKILL`, so do the slow work BEFORE you arm.** A restore reached from
+`EXIT`/`INT`/`TERM` is skipped entirely by `kill -9`, and the thing most likely to earn a hard kill
+is a probe that hangs. `vpnleak` nearly demonstrated it on 2026-08-19: resolving the VPN app with
+`for fd in /proc/[0-9]*/fd/*; do readlink "$fd"; done` forks once per descriptor — tens of thousands
+— and did **not return in 2 minutes**; the run was SIGKILLed and nothing was left behind **only
+because the kill landed before the chain was armed**. `find /proc/[0-9]*/fd -lname '/dev/tun*'` does
+the same work in **0.17 s** (curator-measured 2026-08-19). Two rules fall out, and the second is the
+durable one: **a per-file fork inside a `/proc` glob is a hang, not a slow loop** — push the
+predicate into `find`; and **order the tool so every resolution, validation and probe finishes
+before the first state change**, leaving the armed window as short as the work truly requires.
+The strongest form of the same idea is a restore that is the **kernel's**, fired when the descriptor
+closes — that one survives `kill -9` outright.
+
 Verify a change by reading the state back, and only when getting it wrong is dangerous.
 Say nothing when it worked.
 
