@@ -963,3 +963,31 @@ supposed to grow.
     works perfectly and answers a **different** question — here, *"what was true when my parent
     started?"* `CLAUDE-HARNESS.md` §2.1 (mechanism), §3.1 (the T0 half, which PASSED), `H-14` and
     `H-15`; `CORRECTIONS.md` 2026-08-19 *"the canary's own observation channel"*.
+
+### Added 2026-08-19 (a remediation verified against the wrong structure)
+
+97. You removed leaked content from a repository, amended the tip and **force-pushed**, and every
+    local probe now reads clean — `git log -S`, `git grep HEAD`, `git branch -a --contains`,
+    `git rev-list --all`, `git ls-remote`. **Is the content gone?** — added because the answer is
+    **no**, and because the wrong answer was actually *given*: a remediation was reported as verified
+    clean on the strength of exactly those probes. ⛔ **A force-push UNLINKS a commit; it does not
+    DELETE the object**, and **every one of those probes traverses REFS** — each is honest about the
+    ref graph and structurally blind to an unreferenced object that the forge still serves at its
+    SHA. A correct answer names the honest probe — **ask the FORGE, BY SHA**
+    (`gh api repos/<o>/<r>/commits/<sha>`, and read the blob at `…/contents/<path>?ref=<sha>`, not
+    the commit alone) — and knows **the remedy is not a git operation at all**: an unreferenced
+    object is purged by the forge **on request**, so a report filed before that request is *answered*
+    describes refs only. ⚠ **An answer offering `gc`, `--prune`, a reflog expiry or another push
+    FAILS** — those act on the *local* object store, and the copy that matters is the remote's.
+    ⚠ **Two qualifications the first report lacked, and both are part of a passing answer:** the
+    SHA's **discoverability** is what bounds the residual risk, so it must not be published in order
+    to describe the incident — **which is why this question names no repository, no owner and no SHA:
+    this checklist is itself mirrored into a public tree** — and a **public events feed is not a
+    settled negative**, because it lags behind the pushes it reports. ⚠ **Counts of forks, stars and
+    watchers read afterwards bound the audience NOW, not during the exposure window.**
+    ⛔ **It fails toward CLEAN, on the one question where clean is the answer the reader wants**, and
+    the reader is a remediator who has already concluded the problem is solved — which is why no
+    re-run of the same probes ever corrects it. Same family as **Q83/Q84/Q85**: the instrument works
+    perfectly and answers a **different** question. `PRECONDITIONS.md` **P-82** (`G8`); siblings
+    **Q92** (the gate's input set) and **Q93** (the repository object, which no file-content gate
+    reads).
