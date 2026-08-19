@@ -817,3 +817,41 @@ supposed to grow.
     is the state this update exists to catch** — a settled judgement about one set is not a
     probe of the next. Nothing about per-unit identity is relaxed. T2
     `repo-object-identity-accepted`.
+
+### Added 2026-08-19 (the skill-tier reachability probe, and the first authorization content in T0)
+
+94. A skill you need is set **`off`** in `skillOverrides`. **Can `skill-router` still reach it?** —
+    added because the answer is **no**, and the wrong answer is the natural reading of the word
+    *off*: it sounds like *hidden, quietened, kept out of the way*. Probed 2026-08-19 — invoking one
+    returns *"Skill `<name>` is disabled for model invocation in skillOverrides settings"*.
+    ⛔ **`off` DENIES INVOCATION, so a router that dispatches to an `off` skill is a dispatcher with
+    DEAD ENDS** — and the dead end appears at the moment of use, inside a task, not when the setting
+    is written. A correct answer also names the **remedy that does what `off` looks like it does**:
+    rewrite the skill's `description:` (the description edit is live in the same session).
+    ⚠ **An answer that stops at "so don't use `off`" is incomplete** — the generalisable half is
+    that **a config key's NAME describes the intent, not the effect**: reading the settings file
+    tells you what was *requested*, only an invocation tells you what the resolver *does* with it.
+    ⚠ **And do not let this question answer more than it measured**: whether an `off` skill still
+    **appears in the listing** was never probed, so an answer asserting it is hidden — or that it is
+    visible — fails. The direct sibling of *a listed peer is not a reachable one*.
+95. T0 opens with a **scope and authorization** section, and a compaction pass is looking for bytes.
+    **May any of it go?** — added because **nothing in this checklist protected authorization
+    content until it was written**: `grep -i authoriz` over this file returned **zero** while T0 had
+    just gained the only statement of *permission* in the entire corpus. Every other section
+    documents capability, and a capability section survives a trim because a reader notices when a
+    procedure is missing. **Nobody notices a missing basis.**
+    ⛔ **The answer is no, and three properties must still be answerable from T0 alone:**
+    (a) the **named estate** — every entry, and the closing **"nothing else"**, which is what makes
+    the list a boundary rather than a set of examples; (b) for each capability that collects from
+    people who did not consent, the **basis** for collecting and the **retention rule**, together
+    with whether anything enforces that rule automatically — where nothing does, the rule is
+    executed by the person running the tool or not at all; (c) where a basis rests on one specific
+    case being permitted, **the sentence saying it does not generalise to any other**.
+    ⚠ **(c) without that second half is the dangerous partial**: a recorded exception reads as a
+    precedent for the general case.
+    ⚠ **A trim that keeps the estate list and drops the bases FAILS.** The bases are the half that
+    cannot be re-derived — a corpus can state what a tool captures and how to handle the output, and
+    could never state why producing it is permitted. ⚠ **This question is about scope, not about
+    handling rules, and merging the two fails it**: handling and permission are different claims,
+    and a handling section can be complete and detailed for months while the permission question
+    goes unwritten.
