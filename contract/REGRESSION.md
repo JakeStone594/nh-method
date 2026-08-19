@@ -11,14 +11,21 @@ An unanswerable question **blocks the change**. Do not proceed and "fix it later
 For each question: read T0 only. If T0 answers it, PASS. If T0 names a T1 file that answers it,
 PASS. If you need two hops, a search, or prior knowledge from this conversation, **FAIL**.
 
-⛔ **READ T0 FROM DISK, NOT FROM YOUR DELIVERED CONTEXT — added 2026-08-19.** If you are a
-**subagent**, the T0 in your context is the **parent's session-start snapshot** and can be hours
-stale (`CLAUDE-HARNESS.md` §2.1). Measured that day: an inherited T0 was missing
+⛔ **READ T0 FROM DISK, NOT FROM YOUR DELIVERED CONTEXT — added 2026-08-19, generalised the same
+day.** ⛔ **T0 IS LOADED ONCE PER SESSION, AND PARENT AND CHILD ARE BOTH SNAPSHOTS — so this is a
+SESSION rule, not a subagent rule.** `CLAUDE-HARNESS.md` §2.1 settled the child's copy; **`H-15`
+closed the parent's, and the answer was the same**: a parent session's delivered T0 still lacked a
+section **~12 h** after that section landed on disk, across several further T0 edits **of that
+session's own making**. ⭐ **The sharpest form, because it is the one that catches a careful reader:
+A SESSION THAT EDITS T0 CANNOT VERIFY ITS OWN EDIT FROM ITS CONTEXT — the author is the last person
+to see it.** ⚠ **This clause said *"if you are a **subagent**"* until `H-15` closed, and that
+narrowness invited a parent to conclude its own copy was fine** — the stale-instruction shape, in
+the file that scores everything else. Measured that day: an inherited T0 was missing
 §*Scope and authorization* **entirely** while it had been on disk since the small hours — so scoring
 **Q95** from context would have manufactured a FAIL on a section that is present, or licensed
-"correcting" this file. `cat /root/CLAUDE.md` costs nothing and is the whole remedy. ⚠ **The
-inverse is not safe either**: for a fresh parent the inherited copy *is* disk-current, so this is a
-question to answer, not a default to assume.
+"correcting" this file. `cat /root/CLAUDE.md` costs nothing and is the whole remedy, **whoever you
+are**. ⚠ **The inverse is not safe either**: for a fresh session the delivered copy *is*
+disk-current, so this is a question to answer, not a default to assume.
 
 Answering from memory of the pre-split file is the failure mode this checklist exists to catch —
 be strict about it.
