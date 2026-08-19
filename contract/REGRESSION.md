@@ -771,6 +771,14 @@ supposed to grow.
     ⚠ **An answer that reaches for the four-root `cmp` loop is the state this question exists to
     catch** — that loop is scoped to the private mirror and is the wrong instrument here; the
     numbering gap is the tell, not a defect to close.
+    ⛔ **UPDATED 2026-08-19 — A DIVERGENCE CAN ALSO BE A REWRITE AT THE SAME NUMBER, AND THAT SHAPE
+    LEAVES NO TELL AT ALL.** Two questions were ported to the public tree in **generalised** form —
+    the estate, the tool names, the dated incidents and the local `PRECONDITIONS.md`/T2 pointers
+    stripped — while **keeping their numbers**, so the numbering stays contiguous and `cmp` reports
+    the same single DRIFT it reports for the omission. **The gap is a tell for OMISSION ONLY**, and
+    an answer offering it as the test for divergence in general now fails this question. ⚠ **The
+    divergence set is a DECISION THAT GROWS and T2 `nh-method-repo` owns it — do not quote a count,
+    and read that memory before judging any diff of this file.**
     ⛔ **The second half is the gate.** A green run is a statement about **the bytes the gate was
     handed**, never about the artefact git will publish: until 2026-08-18 it built its input from
     `git ls-files` alone and **had never read a commit message**, while the private repo's root
