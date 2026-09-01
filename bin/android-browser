@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+#
+# android-browser — open a URL in Android's browser from inside the chroot.
+# ======================================================================================
+# WHY THIS EXISTS
+#   The chroot has no browser and no display. Anything that wants to "open a browser" —
+#   `gh auth login`, an OAuth device flow, a captive-portal check — either fails or hangs
+#   waiting for one. Android has a perfectly good browser one root away.
+#
+#   Tools discover a browser through $BROWSER (and gh through $GH_BROWSER), and both
+#   expect an EXECUTABLE, not a shell alias. The aliases in ~/.zshrc cannot be used here.
+#
+# PRECONDITIONS THAT FAIL SILENTLY ON THIS BOX
+#   * `am` is one of the ~20 /system/bin wrappers that exec app_process, which cannot link
+#     in this chroot. `cmd` is a native ELF and works. Use `cmd activity`, never `am`.
+#     (docs/PRECONDITIONS.md N-13, N-42)
+#   * `cmd activity start` prints "Starting: Intent {...}" on success AND on a failure to
+#     resolve, so the exit code is not the observable. Errors arrive as an "Error:" line.
+#
+# USAGE
+#   android-browser <url>
+#   BROWSER=android-browser GH_BROWSER=android-browser gh auth login
+#
+# EXIT CODES
+#   0 = the intent was accepted by Android
+#   1 = refused (bad or missing URL), or the intent could not be resolved
+# ======================================================================================
+
+set -uo pipefail
+
+GRN=$'\033[32m'; RED=$'\033[31m'; DIM=$'\033[2m'; RST=$'\033[0m'
+if [ ! -t 1 ]; then GRN=''; RED=''; DIM=''; RST=''; fi
+ok()   { echo "  ${GRN}[ ok ]${RST} $*"; }
+bad()  { echo "  ${RED}[FAIL]${RST} $*" >&2; }
+info() { echo "  ${DIM}$*${RST}"; }
+die()  { echo "${RED}android-browser: $*${RST}" >&2; exit 1; }
+
+URL="${1:-}"
+[ -n "$URL" ] || die "usage: android-browser <url>"
+
+# Validate before use: this string is handed to another root's activity manager.
+case "$URL" in
+    http://*|https://*) ;;
+    *) die "refusing '$URL' — only http:// and https:// URLs are opened" ;;
+esac
+case "$URL" in
+    *[$'\n\r\t']*|*' '*) die "refusing a URL containing whitespace" ;;
+esac
+
+CMD=/system/bin/cmd
+[ -x "$CMD" ] || die "$CMD is not executable — is /system bind-mounted?"
+
+# No -n <component>: let Android resolve the user's default browser rather than pinning
+# one package that may not be installed.
+out="$("$CMD" activity start \
+        -a android.intent.action.VIEW \
+        -c android.intent.category.BROWSABLE \
+        -d "$URL" 2>&1)"
+
+# VERIFY BY FUNCTION, not by exit code: `cmd activity start` exits 0 even when nothing
+# can handle the intent. But the absence of an Error line is not success either -- it is
+# the absence of one known failure. Success needs both halves, and they answer different
+# questions: "Starting: Intent" proves the command RAN, no "Error:" proves the intent
+# RESOLVED. Empty output and a linker failure both satisfy the second and not the first.
+if ! printf '%s\n' "$out" | grep -q '^Starting: Intent'; then
+    bad "the command did not run"
+    [ -n "$out" ] && printf '%s\n' "$out" | sed 's/^/         /' >&2
+    info "$CMD is executable but may not link -- check its interpreter resolves:"
+    info "  readelf -l $CMD | grep interpreter    # then test -e that path"
+    exit 1
+fi
+
+if printf '%s\n' "$out" | grep -q '^Error:'; then
+    bad "Android could not open it"
+    printf '%s\n' "$out" | sed 's/^/         /' >&2
+    info "is a browser installed on the Android side?"
+    exit 1
+fi
+
+ok "opened on the Android side — look at the phone's screen"
+[ -n "$out" ] && printf '%s\n' "$out" | sed 's/^/         /'
+exit 0

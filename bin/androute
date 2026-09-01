@@ -1,0 +1,319 @@
+#!/bin/bash
+# androute — make Android's policy routing legible from the Kali chroot.
+set -uo pipefail
+. /usr/local/lib/nh/common.sh || { echo "androute: /usr/local/lib/nh/common.sh missing" >&2; exit 1; }
+
+GRN=$'\033[32m'; YEL=$'\033[33m'; RED=$'\033[31m'; DIM=$'\033[2m'; RST=$'\033[0m'
+# Strip colour when stdout is not a tty. `_TTY` below was computed and then used ONLY for
+# the width probe, so `androute check > file` wrote raw ANSI escapes into the file — the
+# markers were width-aware but never colour-aware. The tty test must be taken at TOP LEVEL
+# and once: inside a $( ) stdout is a pipe and the answer is always 'no' (PRECONDITIONS P-51).
+if [ ! -t 1 ]; then GRN=''; YEL=''; RED=''; DIM=''; RST=''; fi
+
+# --- output geometry -------------------------------------------------------
+# Ask the terminal how wide it is. A hardcoded column count is a hardcoded device
+# fact, and this file had six of them: on a phone terminal every one of them wrapped
+# and the continuation landed at column 0, shattering every column downstream.
+# Non-tty gets a FIXED 80 so a redirected report is reproducible anywhere.
+_TTY=0; [ -t 1 ] && _TTY=1
+_probe_cols() {
+    local c=""
+    if [ "$_TTY" = 1 ]; then
+        c=$(tput cols 2>/dev/null)
+        [ -n "$c" ] || c=$(stty size 2>/dev/null | awk '{print $2}')
+        [ -n "$c" ] || c="${COLUMNS:-}"
+    fi
+    case "${c:-}" in ''|*[!0-9]*) c=80 ;; esac
+    [ "$c" -lt 36 ]  && c=36
+    [ "$c" -gt 100 ] && c=100
+    printf '%s' "$c"
+}
+_COLS=$(_probe_cols)
+_cols() { printf '%s' "$_COLS"; }
+
+# vlen() measures VISIBLE width, so a colour escape never inflates the arithmetic.
+# emit() wraps prose under its own prefix and NEVER breaks a word — a split IP,
+# path or flag no longer names the thing it names.
+_AWKLIB='
+function vlen(s,   t) { t = s; gsub(/\033\[[0-9;]*m/, "", t); return length(t) }
+function emit(p1, p2, txt,   n, i, words, line, pfx) {
+    n = split(txt, words, " ")
+    if (n == 0) { print p1; return }
+    pfx = p1; line = ""
+    for (i = 1; i <= n; i++) {
+        if (line == "") line = pfx words[i]
+        else if (vlen(line) + 1 + vlen(words[i]) <= W) line = line " " words[i]
+        else { print line; pfx = p2; line = pfx words[i] }
+    }
+    print line
+}
+function pad(n) { return sprintf("%*s", n, "") }
+'
+_wrap() { awk -v W="$(_cols)" -v P1="$1" -v P2="$2" "$_AWKLIB"'{ emit(P1, P2, $0) }'; }
+_cmd()  { printf '  %s\n' "$*"; }   # a command is NEVER wrapped: it must stay pasteable
+
+# Two derived columns. The label width comes from the longest label PRESENT, never
+# from a literal; below the width where a description would get less than MIND
+# columns the rows STACK rather than overflow.
+_rows() {
+    awk -v W="$(_cols)" -F'\t' "$_AWKLIB"'
+    { lab[NR] = $1; desc[NR] = $2; if (vlen($1) > m) m = vlen($1) }
+    END {
+        two = (W - 2 - m - 3) >= 24
+        for (i = 1; i <= NR; i++) {
+            if (desc[i] == "") { print "  " lab[i]; continue }
+            if (two) emit(sprintf("  %-*s   ", m, lab[i]), pad(m + 5), desc[i])
+            else { print "  " lab[i]; emit(pad(6), pad(6), desc[i]) }
+        }
+    }'
+}
+_kv() {
+    awk -v W="$(_cols)" -F'\t' "$_AWKLIB"'
+    { lab[NR] = $1; val[NR] = $2; if (vlen($1) > m) m = vlen($1) }
+    END {
+        two = (W - 2 - m - 3) >= 16
+        for (i = 1; i <= NR; i++) {
+            if (two) emit(sprintf("  %-*s : ", m, lab[i]), pad(m + 5), val[i])
+            else { print "  " lab[i] ":"; emit(pad(6), pad(6), val[i]) }
+        }
+    }'
+}
+# A command with a trailing note: one line while it fits, else the note drops to
+# its own line. The COMMAND itself is never folded.
+_lit() {
+    awk -v W="$(_cols)" -F'\t' "$_AWKLIB"'
+    { cmd[NR] = $1; note[NR] = $2; if (length($1) > m) m = length($1) }
+    END {
+        for (i = 1; i <= NR; i++) {
+            if (note[i] == "") { print "  " cmd[i]; continue }
+            if (2 + m + 3 + 2 + length(note[i]) <= W)
+                printf "  %-*s   # %s\n", m, cmd[i], note[i]
+            else { print "  " cmd[i]; emit(pad(6) "# ", pad(8), note[i]) }
+        }
+    }'
+}
+# Three columns where the last one is long free text: the first two are derived,
+# the third takes the remainder and wraps into its own column.
+_tbl3() {
+    awk -v W="$(_cols)" -v H1="$1" -v H2="$2" -v H3="$3" -F'\t' "$_AWKLIB"'
+    NF >= 3 { a[++n] = $1; b[n] = $2; c[n] = $3
+              if (length($1) > w1) w1 = length($1)
+              if (length($2) > w2) w2 = length($2) }
+    END {
+        if (n == 0) { print "  (none)"; exit }
+        if (length(H1) > w1) w1 = length(H1)
+        if (length(H2) > w2) w2 = length(H2)
+        head = 2 + w1 + 1 + w2 + 1
+        if ((W - head) >= 24) {
+            printf "  %-*s %-*s %s\n", w1, H1, w2, H2, H3
+            for (i = 1; i <= n; i++)
+                emit(sprintf("  %-*s %-*s ", w1, a[i], w2, b[i]), pad(head), c[i])
+        } else {
+            printf "  %s / %s, then %s beneath\n", H1, H2, H3
+            for (i = 1; i <= n; i++) {
+                printf "  %s / %s\n", a[i], b[i]
+                emit(pad(6), pad(6), c[i])
+            }
+        }
+    }'
+}
+# A data record with an optional annotation. The record gets a HANGING indent rather
+# than being left to overflow: an overflowing line is wrapped by the TERMINAL anyway,
+# at column 0, which is precisely what destroys every column below it. The annotation
+# rides alongside while the pair fits and drops beneath when it does not.
+_annot() {   # $1=record  $2=colour  $3=note
+    local note="${3:-}"
+    if [ -n "$note" ] && [ $(( 2 + ${#1} + 3 + 3 + ${#note} )) -le "$(_cols)" ]; then
+        printf '  %s   %s<- %s%s\n' "$1" "$2" "$note" "$RST"
+        return
+    fi
+    printf '%s\n' "$1" | _wrap "  " "      "
+    [ -n "$note" ] && printf '%s\n' "<- $note" | _wrap "      " "         " \
+        | while IFS= read -r l; do printf '%s%s%s\n' "$2" "$l" "$RST"; done
+    return 0
+}
+
+# Marker lines wrap UNDER their marker, so the marker column survives a long
+# message. The hanging indent is derived from the marker itself, not declared.
+_banner() { printf '%s\n' "$*" | _wrap "" "  "; }   # the verb's own title line
+
+_mark() {   # $1=marker  $2=colour  rest=message
+    local m="$1" c="$2"; shift 2
+    printf '%s\n' "$*" | _wrap "  ${c}${m}${RST} " "$(printf '%*s' $(( 3 + ${#m} )) '')"
+}
+# ok/info -> stdout, bad/warn/die -> stderr. The redirect belongs on the _mark CALL, never
+# inside _mark: all four markers share that one helper, so a `>&2` in there would send `ok`
+# to stderr as well.
+ok()   { _mark '[ ok ]' "$GRN" "$@"; }
+bad()  { _mark '[FAIL]' "$RED" "$@" >&2; }
+warn() { _mark '[warn]' "$YEL" "$@" >&2; }
+info() { printf '%s\n' "$*" | _wrap "  ${DIM}" "  ${DIM}" | sed "s/\$/${RST}/"; }
+die()  { printf '%s\n' "androute: $*" | _wrap "${RED}" "${RED}  " | sed "s/\$/${RST}/" >&2; exit 1; }
+
+# grep -c reads all input; grep -q exits early and SIGPIPEs the producer, which
+# pipefail turns into a false negative on a successful match.
+# rc >=2 means the probe DID NOT RUN — a pattern this grep rejects, or a file it
+# cannot read. Reporting that as "no match" is how a broken probe reads as a
+# clean result, so say so and return 2. Boolean callers are unaffected.
+
+main_has_default() { awk 'NR>1 && $2=="00000000"{f=1} END{exit !f}' /proc/net/route; }
+main_is_consulted() { ip rule show 2>/dev/null | matches -F 'lookup main'; }
+
+do_resolve() {
+    local dest="${1:-8.8.8.8}"
+    _banner "androute — resolving $dest"
+    # ⛔ GATE ON ip's EXIT STATUS, not on whether it printed something.
+    #
+    # This was `line=$(ip route get "$dest" 2>&1 | head -1)` — stderr folded INTO the
+    # capture. `ip` writes its parse error to stderr and exits non-zero, so the error text
+    # became "the route": `androute bogus` printed
+    #     Error: any valid prefix is expected rather than "bogus".
+    # as the resolved route, reported `interface : ?  table : main`, and EXITED 0. A
+    # read-only verb reporting a failure as a success is the exact thing this estate is
+    # built to prevent, and the `[ -z "$line" ]` guard below could never fire against it
+    # because there was always output to capture.
+    #
+    # stderr is kept, but SEPARATELY, so a real diagnostic still reaches the operator.
+    local line err rc
+    err=$(ip route get "$dest" 2>&1 1>/dev/null); rc=$?
+    line=$(ip route get "$dest" 2>/dev/null | head -1)
+    if [ "$rc" -ne 0 ] || [ -z "$line" ]; then
+        die "'ip route get $dest' failed (rc=$rc): ${err:-no output on either stream}"
+    fi
+    printf '%s\n' "$line" | _wrap "  " "    "
+    echo
+    local dev tbl via src
+    dev=$(grep -oE 'dev [a-z0-9_-]+' <<<"$line" | head -1 | awk '{print $2}')
+    tbl=$(grep -oE 'table [0-9a-z]+'  <<<"$line" | head -1 | awk '{print $2}')
+    via=$(grep -oE 'via [0-9.]+'      <<<"$line" | head -1 | awk '{print $2}')
+    src=$(grep -oE 'src [0-9.]+'      <<<"$line" | head -1 | awk '{print $2}')
+    printf '%s\t%s\n' \
+        "interface" "${dev:-?}" \
+        "gateway"   "${via:-<directly attached>}" \
+        "source"    "${src:-?}" \
+        "table"     "${tbl:-main}" | _kv
+    [ -n "${tbl:-}" ] && [ "$tbl" != main ] && \
+        info "table $tbl is allocated per network instance — it WILL change. Do not hardcode it."
+    echo
+    # the trap this tool exists for
+    if ! main_has_default; then
+        warn "the MAIN table has no default route."
+        info "so 'ip route show default' prints nothing and EXITS 0 — it is not evidence of no route."
+        info "anything reading /proc/net/route (bettercap, some scanners) will fail to find a gateway."
+    fi
+    # egress sanity
+    local expect; expect=$(ip -o -4 addr show 2>/dev/null | awk '{print $2}' | grep -v '^lo$' | tr '\n' ' ')
+    info "interfaces with IPv4: $expect"
+    info "if that 'dev' is not the one you meant, your scan/attack is leaving via the wrong link."
+}
+
+do_tables() {
+    _banner "androute — policy tables holding routes"
+    local ids rows=""
+    ids=$(ip rule show 2>/dev/null | grep -oE 'lookup [0-9a-z]+' | awk '{print $2}' | sort -u)
+    for t in main $ids; do
+        local routes; routes=$(ip route show table "$t" 2>/dev/null)
+        [ -z "$routes" ] && continue
+        while read -r r; do
+            [ -z "$r" ] && continue
+            local d; d=$(grep -oE 'dev [a-z0-9_-]+' <<<"$r" | head -1 | awk '{print $2}')
+            rows+="$t"$'\t'"${d:--}"$'\t'"$r"$'\n'
+        done <<<"$routes"
+    done
+    printf '%s' "$rows" | _tbl3 TABLE IFACE ROUTE
+    echo
+    info "ids are per-network-instance and drift across reboots/reconnects"
+}
+
+do_rules() {
+    _banner "androute — ip rule chain (first match wins, lowest priority first)"
+    # `ip rule show` separates the priority from the selector with a literal TAB, which
+    # renders 1..8 columns wide depending on where it lands — so any width arithmetic done
+    # on the raw string is wrong by an unknowable amount. Flatten it to one space first.
+    ip rule show 2>/dev/null | tr '\t' ' ' | while read -r r; do
+        case "$r" in
+            *"lookup main"*)    _annot "$r" "$YEL" "main is LIVE here" ;;
+            *unreachable*)      _annot "$r" "$DIM" "fallthrough; nothing below this" ;;
+            *"lookup 99"*)      _annot "$r" "$DIM" "ROUTE_TABLE_LEGACY_SYSTEM" ;;
+            *"lookup 98"*)      _annot "$r" "$DIM" "ROUTE_TABLE_LEGACY_NETWORK" ;;
+            *"lookup 97"*)      _annot "$r" "$DIM" "ROUTE_TABLE_LOCAL_NETWORK" ;;
+            *)                  _annot "$r" "" "" ;;
+        esac
+    done
+    echo
+    if main_is_consulted; then
+        warn "a 'lookup main' rule EXISTS — routes you add to main are LIVE and change packet flow."
+    else
+        ok "no 'lookup main' rule — main is never consulted, so a route added there is INERT"
+        info "(that is why 'lanmitm prep' can safely add a default for bettercap to discover)"
+    fi
+}
+
+do_check() {
+    _banner "androute check"
+    main_has_default && ok "main has a default route (tools reading /proc/net/route will work)" \
+                     || warn "main has NO default — bettercap et al. will say 'Could not detect gateway'"
+    main_is_consulted && warn "main is LIVE (a 'lookup main' rule exists) — edits there affect real traffic" \
+                      || ok "main is inert (no 'lookup main' rule)"
+    local n; n=$(ip -o -4 addr show 2>/dev/null | grep -vc ' lo ')
+    [ "$n" -gt 1 ] && warn "$n interfaces have IPv4 — check 'androute <target>' before scanning, egress follows whichever is up"
+    # IPv6: the same trap, and this box blackholes v6 on cellular AND VPN
+    if ip -6 addr show scope global 2>/dev/null | grep -q inet6; then
+        warn "a global IPv6 address exists. 'ip -6 route show default' also reads main and is empty."
+        info "use 'ip -6 route get <addr>'. If connections stall at a multiple of the timeout, suspect the v6 blackhole."
+    fi
+    echo
+    info "resolve one destination properly with:"
+    _cmd "androute <destination>"
+}
+
+usage() {
+    printf '%s\n' \
+"androute — show the route Android will actually use, because 'ip route show' reads a table Android leaves empty." \
+        | _wrap "" "  "
+    echo
+    echo "USAGE"
+    printf '%s\t%s\n' \
+        "androute [destination]" "default 8.8.8.8" \
+        "androute <verb>" "" | _lit
+    echo
+    echo "VERBS"
+    printf '%s\t%s\n' \
+        "<destination>" "resolve one address: interface, gateway, source IP, table" \
+        "tables"        "every policy table that actually holds routes" \
+        "rules"         "the ip rule chain, annotated with what each entry is" \
+        "check"         "flag the conditions that mislead other tools" | _rows
+    echo
+    echo "OPTIONS"
+    printf '%s\t%s\n' \
+        "-h, --help"  "this screen" | _rows
+    echo
+    echo "TYPICAL RUN"
+    printf '%s\t%s\n' \
+        "androute check"        "anything here about to mislead a tool?" \
+        "androute 192.0.2.1" "which link would this really leave by?" \
+        "androute tables"       "where the real routes are kept" \
+        "androute rules"        "why that table got chosen" | _lit
+    echo
+    echo "COST"
+    printf '%s\n' "Nothing. Every verb is read-only — it reads /proc and 'ip', and writes no route, rule or rule table." | _wrap "  " "  "
+    echo
+    echo "SEE ALSO"
+    printf '%s\t%s\n' \
+        "ip route get <dst>" "the one-line answer this tool explains" \
+        "lanmitm status"     "the MITM preconditions, including the main-table default" \
+        "wificonnect status" "which radio is actually associated" | _rows
+}
+
+case "${1:-}" in
+    tables) do_tables ;;
+    rules)  do_rules ;;
+    check)  do_check ;;
+    --help-full) die "there is one help screen: androute --help" ;;
+    -h|--help|help) usage ;;
+    "")     do_resolve 8.8.8.8 ;;
+    # A flag-shaped argument is NOT a destination: without this arm it falls to `*)` and is
+    # resolved as a hostname — an argument the operator typed, silently used for something else.
+    -*)     die "unknown option '$1' — androute takes a destination, or one of: tables, rules, check. Run 'androute --help'." ;;
+    *)      do_resolve "$1" ;;
+esac

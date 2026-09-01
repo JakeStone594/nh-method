@@ -1,0 +1,152 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# THIS REPOSITORY IS PUBLIC. A mistake here is not recoverable by deletion —
+# what was cloned, cached or indexed stays cloned, cached and indexed.
+#
+# The content directories are therefore DENY-BY-DEFAULT with named exceptions.
+# A denylist is the wrong shape for a public tree: it protects against the leak
+# classes you thought of, and a new file is published by `git add -A` unless
+# somebody remembered to name it. An allowlist fails closed — a new document is
+# invisible to git until it is deliberately added here, which is a decision
+# somebody has to make rather than one they have to remember not to forget.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── ROOT: deny by default. Added 2026-08-23 ─────────────────────────────────
+# ⛔ THE BLOCK BELOW WAS DENY-BY-DEFAULT ONLY *INSIDE* THE DIRECTORIES IT NAMES.
+# A NEW TOP-LEVEL DIRECTORY FELL THROUGH TO THE DENYLIST AND WAS PUBLISHABLE BY
+# `git add -A`. Measured 2026-08-23 with `git check-ignore --no-index`:
+# `docs/anything.md` and `notes/whatever.md` both came back NOT IGNORED, while
+# `method/newfile.md` and `bin/newtool` were correctly ignored. The header above
+# claims a new document is invisible until deliberately added; that was true one
+# level down and false at the root, which is the level a new category arrives at.
+#
+# This rule closes it. `/*` excludes every top-level entry; the eight below are
+# re-admitted by name, and they are exactly what `git ls-files | cut -d/ -f1`
+# yields today. A NEW top-level path is now invisible to git until someone adds
+# it here, which is a decision rather than an omission.
+#
+# ⚠ The directories are re-admitted as `!/dir/` — git cannot re-include anything
+# under an excluded DIRECTORY, so without these the per-directory allowlists
+# below would be unreachable and the repo would publish nothing.
+/*
+!/bin/
+!/contract/
+!/lib/
+!/method/
+!/scripts/
+!/.gitignore
+!/LICENSE
+!/README.md
+
+# ── Content directories: deny by default, allow by name ─────────────────────
+# Note `dir/*` and not `dir/` — git cannot re-include a file whose parent
+# directory is excluded, so the exceptions below would never be reachable.
+method/*
+!method/LYING-PROBES.md
+!method/TOOL-TEST-METHOD.md
+!method/CODING-RULES.md
+
+contract/*
+!contract/RULES.md
+!contract/REGRESSION.md
+
+bin/*
+!bin/bpffs-mount
+!bin/dbus-start
+!bin/androute
+!bin/android-browser
+!bin/catch-boot-warn
+
+lib/*
+!lib/common.sh
+
+scripts/*
+!scripts/scan-secrets.sh
+
+# ── Never commit anything from an engagement ────────────────────────────────
+# Belt and braces: the allowlist above already excludes these, but engagement
+# output is the class where a single miss is worst, and it is cheap to say twice.
+*.pcap
+*.pcapng
+*.cap
+*.hc22000
+*.22000
+*.potfile
+*.hccapx
+SortedEssid*
+Captures/
+captures/
+loot/
+results/
+handshakes/
+
+# ── Credentials and keys ────────────────────────────────────────────────────
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.ovpn
+wpa_supplicant*.conf
+hostapd*.conf
+dnsmasq*.conf
+.env
+*_API.txt
+*api_key*
+*token*
+
+# ── Runtime and device state — none of this is source ───────────────────────
+*.pid
+*.rec
+*.log
+state
+state.torn-down
+snapshot.json
+last-compose.json
+run/
+var/
+
+# ── Local scratch ───────────────────────────────────────────────────────────
+# ⛔ `*.bak` matches `X.bak` and NOT `X.bak.<date>`, and a DATED suffix is the
+# parent project's own backup convention — measured there with `git check-ignore`,
+# where `TOOLS.md.bak` was ignored and `TOOLS.md.bak.2026-08-17` was not. The `*`
+# suffixes below are load-bearing, not tidiness.
+*.orig
+*.bak
+*.bak.*
+*.rej
+*.save
+*.pre-*-fix-*
+*~
+*.swp
+.DS_Store
+__pycache__/
+
+# ── OFFLINE BY OPERATOR DECISION 2026-08-23 — the kernel maps and the ────────
+# ── verification log. NOT drift, NOT an oversight. ──────────────────────────
+# These three documents stay on the device and are copied to the laptop by hand.
+# They are deliberately NOT version-controlled anywhere:
+#
+#   docs/kernel/KERNEL-CAPABILITY-MAP.md
+#   docs/kernel/KERNEL-CODEBASE-MAP.md
+#   docs/kernel/KERNEL-VERIFICATION-LOG.md      (no laptop counterpart at all)
+#
+# Why the rule needs to be NAMED and not left to a generic docs/* deny: the
+# decision has a reason a future pass must not have to guess at. They carry
+# build-host paths, signing-key paths and the signing certificate's Subject Key
+# Identifier; a whole-document scan on 2026-08-23 also found this device's
+# carrier-assigned cellular address quoted in the verification log (redacted on
+# discovery). scan-secrets.sh never saw any of it, because the gate scans what
+# git would publish and git would publish none of these — so "no backup" and
+# "never secret-scanned" were one fact, not two.
+#
+# ⛔ IF YOU ARE ABOUT TO ADD AN EXCEPTION HERE: the ordering is SCAN FIRST, THEN
+# ADD. Adding a file is what makes the gate start covering it, so an add-then-
+# push sequence stages unscanned content, and nothing enforces that the gate runs
+# before a push (TOOL-BACKLOG G-20). Take it to the operator; this was their call.
+docs/kernel/
+docs/kernel/*
+**/KERNEL-CAPABILITY-MAP.md*
+**/KERNEL-CODEBASE-MAP.md*
+**/KERNEL-VERIFICATION-LOG.md*

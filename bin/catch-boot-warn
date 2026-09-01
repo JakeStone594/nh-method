@@ -1,0 +1,428 @@
+#!/bin/bash
+# catch-boot-warn — did an early-boot kernel WARN fire, and can we still prove it?
+#
+# The evidence has a lifetime: the dmesg ring is flooded here and wraps within minutes, and
+# pstore's console-ramoops wraps too, so run this within a few minutes of a reboot. Three
+# verdicts, never two — a wrapped ring is CANNOT-TELL, not ABSENT. set -e is omitted so a
+# failed probe is classified rather than aborting the run half-reported.
+#
+# The taint-word cross-check, the verdict table and the test hooks: /root/docs/TOOLS.md.
+set -uo pipefail
+
+# ------------------------------ help rendering --------------------------------
+# The tty test and the width are taken ONCE here at the top level, where fds
+# 0/1/2 are still the terminal. Inside a $( ) or a `while ... done < file` loop
+# fd 1 is a pipe, so a tty test there answers "not a terminal" and `tput cols`
+# falls back to the terminfo default of 80. A non-tty gets that 80 deliberately,
+# so a redirected help screen is reproducible.
+if [ -t 1 ]; then _TTY=1; else _TTY=0; fi
+_TERM_COLS=80
+if [ "$_TTY" -eq 1 ]; then
+    _TERM_COLS="$(tput cols 2>/dev/null)"
+    [ -n "$_TERM_COLS" ] || _TERM_COLS="${COLUMNS:-80}"
+fi
+case "$_TERM_COLS" in ''|*[!0-9]*) _TERM_COLS=80 ;; esac
+
+_cols() {
+    local c="$_TERM_COLS"
+    [ "$c" -lt 36 ]  && c=36
+    [ "$c" -gt 100 ] && c=100
+    printf '%s' "$c"
+}
+
+# _wrap <width> <first-indent> <next-indent> <text...>
+_wrap() {
+    local w="$1" pre="$2" nxt="$3"; shift 3
+    local line="" word avail glob=1
+    local -a words=()
+    case "$-" in *f*) glob=0 ;; esac
+    set -f; words=( $* ); [ "$glob" -eq 1 ] && set +f
+    [ "${#words[@]}" -eq 0 ] && return 0
+    for word in "${words[@]}"; do
+        avail=$(( w - ${#pre} )); [ "$avail" -lt 8 ] && avail=8
+        if [ -z "$line" ]; then
+            line="$word"
+        elif [ $(( ${#line} + 1 + ${#word} )) -le "$avail" ]; then
+            line="$line $word"
+        else
+            printf '%s%s\n' "$pre" "$line"; pre="$nxt"; line="$word"
+        fi
+    done
+    printf '%s%s\n' "$pre" "$line"
+}
+
+_h_title() { _wrap "$(_cols)" "" "  " "$*"; }
+_h_sec()   { printf '\n%s\n' "$1"; }
+_h_prose() { _wrap "$(_cols)" "  " "  " "$*"; }
+_h_gap()   { printf '\n'; }
+
+# _h_rows <label> <desc> [<label> <desc> ...]
+# Two columns while the description still gets MIN_DESC characters; below that
+# the row STACKS -- label on its own line, description indented beneath. Narrow
+# is not the same as broken.
+_h_rows() {
+    local w labw=0 min=24 i j lab desc head pad
+    w="$(_cols)"
+    i=1; while [ "$i" -le "$#" ]; do lab="${!i}"
+        [ "${#lab}" -gt "$labw" ] && labw="${#lab}"; i=$((i+2)); done
+    i=1
+    while [ "$i" -le "$#" ]; do
+        j=$((i+1)); lab="${!i}"; desc=""; [ "$j" -le "$#" ] && desc="${!j}"
+        if [ -z "$desc" ]; then
+            printf '  %s\n' "$lab"
+        elif [ $(( w - labw - 5 )) -ge "$min" ]; then
+            printf -v head '  %-*s   ' "$labw" "$lab"
+            printf -v pad  '%*s' "${#head}" ''
+            _wrap "$w" "$head" "$pad" "$desc"
+        else
+            printf '  %s\n' "$lab"
+            _wrap "$w" "      " "      " "$desc"
+        fi
+        i=$((i+2))
+    done
+}
+
+# _h_lit <command> <note> [<command> <note> ...] -- commands are never wrapped.
+# The comment column is the longest command that still leaves room for the LONGEST
+# note in the block. Two consequences, both deliberate:
+#   * it is derived, never declared, so adding a longer command cannot break it;
+#   * the decision is per BLOCK, not per row, so a block never comes out half
+#     aligned and half stacked. A command too long for the column keeps its note
+#     on the line beneath, and is still emitted whole.
+_h_lit() {
+    local w cmdw=0 notew=0 i j cmd note
+    w="$(_cols)"
+    i=2; while [ "$i" -le "$#" ]; do note="${!i}"
+        [ "${#note}" -gt "$notew" ] && notew="${#note}"; i=$((i+2)); done
+    i=1; while [ "$i" -le "$#" ]; do cmd="${!i}"
+        if [ $(( 2 + ${#cmd} + 3 + 2 + notew )) -le "$w" ] && [ "${#cmd}" -gt "$cmdw" ]; then
+            cmdw="${#cmd}"
+        fi
+        i=$((i+2)); done
+    i=1
+    while [ "$i" -le "$#" ]; do
+        j=$((i+1)); cmd="${!i}"; note=""; [ "$j" -le "$#" ] && note="${!j}"
+        if [ -z "$note" ]; then
+            printf '  %s\n' "$cmd"
+        elif [ "${#cmd}" -le "$cmdw" ]; then
+            printf '  %-*s   # %s\n' "$cmdw" "$cmd" "$note"
+        else
+            printf '  %s\n' "$cmd"
+            _wrap "$w" "      # " "      # " "$note"
+        fi
+        i=$((i+2))
+    done
+}
+
+OUT=${CATCH_BOOT_DIR:-/root/boot-logs}
+DMESG_CMD=${CATCH_BOOT_DMESG_CMD:-dmesg}
+TAINT_FILE=${CATCH_BOOT_TAINT:-/proc/sys/kernel/tainted}
+PSTORE_DIR=${CATCH_BOOT_PSTORE:-/sys/fs/pstore}
+PREV_DUMP=${CATCH_BOOT_PREV_DUMP:-/proc/1/root/data/log/prev_dump.log}
+EARLY_MAX=${CATCH_BOOT_EARLY_MAX:-5}
+
+RED=$'\033[31m'; GRN=$'\033[32m'; YEL=$'\033[33m'; DIM=$'\033[2m'; RST=$'\033[0m'
+
+# Probe lines wrap at the terminal width, under their marker, so the marker
+# column survives a long message. The continuation indent is DERIVED from the
+# marker's visible width and passed beside it, never retyped as a literal number.
+_say() {   # _say <lead-with-colour> <visible-width-of-lead> <per-line-tint> <text...>
+    local lead="$1" mw="$2" tint="$3"; shift 3
+    local w pad first=1 line
+    w="$(_cols)"
+    printf -v pad '%*s' "$mw" ''
+    while IFS= read -r line; do
+        line="${line#"$pad"}"
+        if [ "$first" -eq 1 ]; then printf '%s%s%s%s\n' "$lead" "$tint" "$line" "${tint:+$RST}"
+        else                        printf '%s%s%s%s\n' "$pad"  "$tint" "$line" "${tint:+$RST}"; fi
+        first=0
+    done < <(_wrap "$w" "$pad" "$pad" "$*")
+}
+ok()   { _say "  ${GRN}[ ok ]${RST} " 9 "" "$*"; }
+bad()  { _say "  ${RED}[FAIL]${RST} " 9 "" "$*" >&2; }
+warn() { _say "  ${YEL}[warn]${RST} " 9 "" "$*" >&2; }
+info() { _say "  " 2 "$DIM" "$*"; }
+# A PATH is never wrapped: it has to stay copy-pasteable, and it has no spaces to
+# break at anyway.
+path_() { printf '  %s\n' "$*"; }
+
+# ---------------------------------- help --------------------------------------
+do_help() {
+    _h_title "catch-boot-warn -- did the early-boot kernel WARN fire, and can we still PROVE it?"
+
+    _h_sec "USAGE"
+    _h_lit "catch-boot-warn" "no verbs, no options -- anything else is refused with exit 1"
+
+    _h_sec "CHAIN"
+    _h_prose "Reboot, then run this SOON -- within a few minutes. The dmesg ring is flooded here and wraps within minutes, and pstore's console-ramoops wraps too, so the trace is unrecoverable if you wait. There is nothing to run first and nothing to run after; it saves its capture for you to analyse later."
+
+    _h_sec "WHAT IT REPORTS"
+    _h_rows \
+        "FOUND"       "an early-boot Call trace is in the capture, and the capture has been saved" \
+        "ABSENT"      "determinate negative. Nothing needing action" \
+        "CANNOT-TELL" "the evidence expired, a probe failed, or dmesg and the taint word DISAGREE. NOTHING may be concluded from that run"
+    _h_gap
+    _h_prose "The kernel taint word is read as a cross-check, because it does NOT wrap: it outlives the dmesg line it is a witness to. A late charger WARN is never mistaken for the early-boot one -- hits are classified by their own timestamp."
+    _h_gap
+    _h_prose "The last line printed is always machine-readable: VERDICT: <verdict> -- <reason>"
+
+    _h_sec "EXIT"
+    _h_rows \
+        "0" "ABSENT" \
+        "1" "CANNOT-TELL -- or a usage error, which takes no capture and prints no VERDICT line, so read the VERDICT line rather than the exit code alone" \
+        "2" "FOUND -- a read-only run found a state needing attention"
+
+    _h_sec "TYPICAL RUN"
+    _h_lit \
+        "catch-boot-warn" "right after a reboot" \
+        "echo \$?" "0 absent / 1 cannot-tell / 2 found" \
+        "ls -t $OUT | head" "the captures it saved"
+
+    _h_sec "COST"
+    _h_prose "Read-only apart from the files it writes under $OUT. It will mount pstore if pstore is not mounted. It NEVER runs 'dmesg -C', which would destroy the very evidence it is looking for."
+
+    _h_sec "ENVIRONMENT"
+    _h_rows \
+        "CATCH_BOOT_DIR"       "where the capture is written" \
+        "CATCH_BOOT_DMESG_CMD" "how the ring is read" \
+        "CATCH_BOOT_TAINT"     "the taint word to cross-check against" \
+        "CATCH_BOOT_PSTORE"    "the pstore mount point" \
+        "CATCH_BOOT_PREV_DUMP" "the previous boot's console, which outlives every ring" \
+        "CATCH_BOOT_EARLY_MAX" "seconds a hit may carry and still count as early boot"
+    _h_prose "In force for this invocation:"
+    path_ "CATCH_BOOT_DIR=$OUT  CATCH_BOOT_DMESG_CMD=$DMESG_CMD  CATCH_BOOT_EARLY_MAX=$EARLY_MAX"
+    path_ "CATCH_BOOT_TAINT=$TAINT_FILE  CATCH_BOOT_PSTORE=$PSTORE_DIR"
+    path_ "CATCH_BOOT_PREV_DUMP=$PREV_DUMP"
+}
+
+# ------------------------------ arguments --------------------------------------
+# This tool takes no verbs and no options beyond the help screen; everything
+# configurable is a CATCH_BOOT_* environment variable. An argument the operator
+# typed and the tool ignored is the tool lying about what it did, so an
+# unrecognised one is refused HERE, above the first write — otherwise a mistyped
+# invocation still writes a dmesg capture to disk.
+_usage_err() {   # <reason> -> stderr, exit 1. Never reaches the capture.
+    printf '%s\n' "catch-boot-warn: $1" >&2
+    printf '\n' >&2
+    printf '%s\n' "USAGE" >&2
+    printf '  %s\n' "catch-boot-warn" \
+                    "catch-boot-warn -h | --help" >&2
+    printf '\n' >&2
+    _wrap "$(_cols)" "  " "  " "It takes no verbs and no options. Everything configurable is a CATCH_BOOT_* environment variable." >&2
+    exit 1
+}
+
+case "${1:-}" in
+    -h|--help)   [ "$#" -le 1 ] || _usage_err "$1 takes no further arguments (got: $2)"
+                 do_help;      exit 0 ;;
+    --help-full) _usage_err "there is one help screen: catch-boot-warn --help" ;;
+    "")          # an EMPTY argument is still an argument the operator typed
+                 [ "$#" -eq 0 ] || _usage_err "empty argument; it takes none" ;;
+    *)           _usage_err "unrecognised argument: $1" ;;
+esac
+
+TS=$(date +%Y-%m-%d-%H-%M-%S)          # '-' not ':' — colons break on the exFAT-backed paths
+install -d -m 755 "$OUT" || { bad "cannot create $OUT"; exit 1; }
+F="$OUT/dmesg-$TS.txt"
+E="$OUT/dmesg-$TS.stderr"
+
+# --- 1. capture -------------------------------------------------------------------------------
+# $DMESG_CMD is deliberately unquoted so the test hook can be a multi-word command. Its stderr is
+# KEPT, because a failing dmesg is otherwise indistinguishable from a quiet kernel.
+$DMESG_CMD > "$F" 2> "$E"
+DRC=$?
+BYTES=$(stat -c%s "$F" 2>/dev/null); BYTES=${BYTES:-0}
+ERRTXT=$(head -c 400 "$E" 2>/dev/null)
+[ -s "$E" ] || rm -f "$E"
+
+echo "saved:"
+path_ "$F"
+info "$BYTES bytes; uptime $(cut -d' ' -f1 /proc/uptime 2>/dev/null || echo '?')s"
+echo
+
+DMESG_OK=1
+if [ "$DRC" -ne 0 ]; then
+    DMESG_OK=0
+elif [ "$BYTES" -eq 0 ]; then
+    DMESG_OK=0
+fi
+
+# --- 2. the taint word — the witness that does NOT wrap ----------------------------------------
+# Bit 9 (W, 512) = a WARN_ON has fired since boot.  Bit 7 (D, 128) = an Oops/BUG.  Bit 2 (S, 4) =
+# heterogeneous CPUs, normal on big.LITTLE.  These survive the ring wrapping, which is the whole
+# reason they are load-bearing here.
+TAINT_RAW=$(cat "$TAINT_FILE" 2>/dev/null)
+TAINT_OK=0
+case "${TAINT_RAW:-x}" in
+    ''|*[!0-9]*) TAINT_OK=0 ;;
+    *)           TAINT_OK=1 ;;
+esac
+
+T_W=0; T_D=0; T_DESC="unreadable"
+if [ "$TAINT_OK" -eq 1 ]; then
+    T_W=$(( (TAINT_RAW >> 9) & 1 ))
+    T_D=$(( (TAINT_RAW >> 7) & 1 ))
+    letters=""
+    bit=0
+    for L in P F S R M B U D A W C I O E L K X T; do
+        [ $(( (TAINT_RAW >> bit) & 1 )) -eq 1 ] && letters="$letters$L"
+        bit=$((bit + 1))
+    done
+    T_DESC="$TAINT_RAW (${letters:-none})"
+fi
+
+# --- 3. does this capture actually COVER early boot? -------------------------------------------
+# Three coverage states, not two: a capture that cannot be parsed is UNKNOWN, never promoted to
+# COVERED.
+COVER="UNKNOWN"; COVER_WHY="no parseable [timestamp] and no boot banner in the capture"
+FIRST=""
+if [ "$DMESG_OK" -eq 1 ]; then
+    # -m1 stops grep after the first match, so there is no `| head` and therefore no SIGPIPE
+    # turning a successful match into a pipeline failure under pipefail.
+    raw=$(grep -am1 -oE '^\[[ ]*[0-9]+\.[0-9]+\]' "$F" 2>/dev/null)
+    FIRST=$(printf '%s' "$raw" | tr -d '[] ')
+    banner=$(grep -ac -E 'Linux version|Booting Linux on physical CPU' "$F" 2>/dev/null); banner=${banner:-0}
+    if [ "$banner" -gt 0 ]; then
+        COVER="COVERED"; COVER_WHY="the kernel boot banner is in this capture"
+    elif [ -n "$FIRST" ]; then
+        # The boot banner is the only positive proof of coverage. A ring start below some
+        # constant is not: the WARNs here fire sub-second and the ring never starts that early.
+        COVER="WRAPPED"; COVER_WHY="ring starts at ${FIRST}s — everything before that is gone"
+    fi
+fi
+
+# --- 4. Call trace hits, CLASSIFIED BY THEIR OWN TIMESTAMP -------------------------------------
+# A late `Call trace` is the recurring pca9468 charger WARN, not the boot one; counting the two
+# together makes FOUND meaningless, so each hit is judged by its own timestamp.
+N_TOTAL=0; N_EARLY=0; N_UNSTAMPED=0; EARLY_TS=""
+if [ "$DMESG_OK" -eq 1 ]; then
+    TRACES=$(grep -a 'Call trace' "$F" 2>/dev/null)
+    while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        N_TOTAL=$((N_TOTAL + 1))
+        ts=${line#*[}; ts=${ts%%]*}; ts=${ts// /}
+        case "${ts:-x}" in
+            ''|*[!0-9.]*) N_UNSTAMPED=$((N_UNSTAMPED + 1)); continue ;;
+        esac
+        secs=${ts%%.*}
+        if [ "${secs:-999999}" -le "$EARLY_MAX" ] 2>/dev/null; then
+            N_EARLY=$((N_EARLY + 1))
+            [ -n "$EARLY_TS" ] || EARLY_TS=$ts
+        fi
+    done <<< "$TRACES"
+fi
+
+# --- 5. report the three inputs ----------------------------------------------------------------
+echo "evidence:"
+if [ "$DMESG_OK" -eq 0 ]; then
+    bad "dmesg probe FAILED — rc=$DRC, $BYTES bytes. This run captured NOTHING."
+    [ -n "$ERRTXT" ] && info "dmesg stderr: $ERRTXT"
+    [ -n "$ERRTXT" ] || info "dmesg printed no error either (check kernel.dmesg_restrict, and that you are root)"
+else
+    ok "dmesg capture usable: $BYTES bytes"
+    case "$COVER" in
+        COVERED) ok   "early-boot coverage: COVERED — $COVER_WHY" ;;
+        WRAPPED) warn "early-boot coverage: WRAPPED — $COVER_WHY" ;;
+        *)       warn "early-boot coverage: UNKNOWN — $COVER_WHY" ;;
+    esac
+    info "Call trace lines: $N_TOTAL total, $N_EARLY at <=${EARLY_MAX}s, $N_UNSTAMPED without a timestamp"
+fi
+if [ "$TAINT_OK" -eq 1 ]; then
+    ok "taint word: $T_DESC   [bit9 W=$T_W (a WARN_ON fired), bit7 D=$T_D (an Oops/BUG fired)]"
+    info "the taint word does NOT wrap — it outlives the dmesg line it is a witness to"
+else
+    bad "taint word UNREADABLE at $TAINT_FILE — the non-wrapping witness is gone too"
+fi
+echo
+
+# --- 6. verdict --------------------------------------------------------------------------------
+# THREE outcomes.  "cannot tell" is never collapsed into "absent".
+VERDICT=""; REASON=""; RC=1
+if [ "$DMESG_OK" -eq 0 ]; then
+    VERDICT="CANNOT-TELL"; RC=1
+    REASON="the dmesg probe failed, so this run has no capture to judge"
+    if [ "$TAINT_OK" -eq 1 ] && [ "$T_W" -eq 1 ]; then
+        warn "taint says a WARN_ON HAS fired this boot and we could not capture it at all."
+    elif [ "$TAINT_OK" -eq 1 ]; then
+        info "taint bit 9 is clear, so probably no WARN has fired — but with no capture this run proves nothing."
+    fi
+elif [ "$N_EARLY" -gt 0 ]; then
+    VERDICT="FOUND"; RC=2
+    REASON="an early-boot Call trace at ${EARLY_TS}s is in $F"
+    if [ "$TAINT_OK" -eq 1 ] && [ "$T_W" -eq 0 ] && [ "$T_D" -eq 0 ]; then
+        warn "DISAGREEMENT: a Call trace is present but taint bits W and D are both CLEAR. A WARN_ON or Oops always taints, so one of the two readings is not what it looks like."
+    fi
+elif [ "$TAINT_OK" -eq 0 ]; then
+    VERDICT="CANNOT-TELL"; RC=1
+    REASON="no early Call trace captured and the taint word could not be read, so nothing rules it out"
+elif [ "$T_W" -eq 0 ] && [ "$T_D" -eq 0 ]; then
+    # The strong negative, and the one case where a WRAPPED ring does not matter: taint does not
+    # wrap, so W=0 means no WARN_ON has fired at ANY point this boot.
+    VERDICT="ABSENT"; RC=0
+    REASON="taint bits W(512) and D(128) are both clear — no WARN_ON or Oops has fired this boot"
+elif [ "$COVER" = "COVERED" ] && [ "$N_TOTAL" -eq 0 ]; then
+    VERDICT="CANNOT-TELL"; RC=1
+    REASON="DISAGREEMENT — taint says a WARN/Oops fired, this capture covers early boot and holds no Call trace at all"
+    warn "$REASON. Do not read this as 'absent'. Either the line left the ring another way, or the taint was set without a trace being printed. The disagreement IS the finding."
+elif [ "$COVER" = "COVERED" ]; then
+    VERDICT="ABSENT"; RC=0
+    REASON="early boot is covered and holds no Call trace; the $N_TOTAL later trace(s) account for taint bit 9"
+    info "the taint word is explained by the LATER traces in this capture, not by an early-boot WARN"
+else
+    VERDICT="CANNOT-TELL"; RC=1
+    REASON="taint says a WARN/Oops fired but early boot is $COVER in this capture — the evidence expired"
+    warn "$REASON. Reboot and re-run within a few minutes -- absence here is NOT absence of the event."
+fi
+
+if [ "$VERDICT" = "FOUND" ]; then
+    echo "=== early-boot Call trace ==="
+    grep -a -n -B8 -A25 'Call trace' "$F" | head -80
+    echo
+fi
+
+# --- 7. the PREVIOUS boot, informational only --------------------------------------------------
+# Deliberately does NOT move the verdict or the exit code: it describes a different boot, and the
+# taint word above describes this one.
+if [ "$PSTORE_DIR" = "/sys/fs/pstore" ] && ! grep -q pstore /proc/mounts; then
+    mount -t pstore pstore "$PSTORE_DIR" 2>/dev/null && info "(mounted pstore)"
+fi
+
+# These sources are rings: the first line is not the earliest, so the window is the MINIMUM over
+# the file. Their lines also carry a <N> priority prefix, so the timestamp cannot be anchored at ^.
+prev_window() {
+    awk 'match($0, /\[[ ]*[0-9]+\.[0-9]+\]/) {
+             t = substr($0, RSTART+1, RLENGTH-2); gsub(/ /, "", t)
+             if (n++ == 0 || t+0 < lo+0) lo = t
+             if (t+0 > hi+0) hi = t }
+         END { if (n) printf "%s %s", lo, hi }' "$1"
+}
+
+dumped=0
+for p in "$PSTORE_DIR"/console-ramoops-* "$PREV_DUMP" /proc/last_kmsg; do
+    [ -f "$p" ] && [ -r "$p" ] || continue
+    n=$(grep -ac 'Call trace' "$p" 2>/dev/null); n=${n:-0}
+    set -- $(prev_window "$p")
+    echo "=== PREVIOUS BOOT (does not affect the verdict) ==="
+    path_ "$p"
+    [ -n "${1:-}" ] && info "covers ${1}s..${2}s of that boot" || info "no parseable timestamp in this source"
+    if [ "$n" -gt 0 ]; then
+        # The WARNING site is the only part that survives a reboot: the timestamp, CPU and PID
+        # all move, so the site is what identifies a standing WARN across boots.
+        grep -a 'WARNING: CPU' "$p" 2>/dev/null | sed 's/.*[Ww]ARNING: CPU/WARNING: CPU/' |
+            sed 's/.* at //' | sort -u | while IFS= read -r site; do
+                [ -n "$site" ] && ok "WARN site: $site"
+            done
+        if [ "$dumped" -eq 0 ]; then
+            # Save the extracted trace, never the whole console: it runs to megabytes and
+            # carries MAC and serial material that nothing here prunes once copied.
+            grep -a -B8 -A25 'Call trace' "$p" | head -80 | tee "$OUT/prev-trace-$TS.txt"
+            dumped=1
+        fi
+    else
+        info "no Call trace in this source"
+    fi
+done
+
+echo
+echo "VERDICT: $VERDICT — $REASON"
+exit "$RC"
