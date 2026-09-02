@@ -1612,6 +1612,15 @@ number until the move lands. Patching one tier while copying the other is exactl
   reference, or `cmp` against a staged draft — never a property of the file alone.** ⚠ **A pass that appends
   DIRECTLY has no staged draft to `cmp` against and has therefore run no check** — the corpus after
   such a pass is **un-contradicted, not known-clean**, and that is the honest way to report it.
+- ⛔ **A DESTRUCTIVE READ MUST NOT SHARE A PIPELINE WITH AN OUTPUT-SHORTENING STEP — the READ-side
+  twin of *stage the draft, then `cmp`* above. Added 2026-09-02, first-hand.** A delete-on-read
+  capture was piped through `sed -n '1,30p'` for readability: **the shortening survived and the data
+  did not.** The run directory was already removed, so the truncated report was the only remaining
+  record. ⭐ **It INVERTS the remedy of T2 [[derive-from-the-artefact-not-a-report]] — you cannot go
+  back to the artefact, because reading it is what destroyed it, so the report IS the artefact and
+  must not be cut.** **Write the full output to a retained file and read sections FROM the file**;
+  never `| head`, `| sed -n`, `| tail` downstream of a destructive step. ⚠ **Scope it by
+  IRREVERSIBILITY, not by tool** — a delete-on-read capture, a consumed pipe, a one-shot ring read.
 - ⛔ **NEVER `git checkout` TO UNDO A SCRATCH EDIT — copy the file aside instead.** Added
   2026-08-11 after a `git checkout` intended to discard a temporary change **reverted uncommitted
   work in the same file**. `git checkout -- <path>` restores the whole path from the index; it has
