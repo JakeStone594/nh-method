@@ -1548,6 +1548,70 @@ number until the move lands. Patching one tier while copying the other is exactl
   post-edit count answer different questions and you need both.** *(Same day, same corpus, two
   actors: this is §*Classification order*'s "a row can be stale because its NEIGHBOURS were
   corrected" produced by a single-anchor edit rather than by an annotation pass.)*
+- ⛔ **WRITING THIS CORPUS'S PROSE THROUGH A SHELL CONTEXT THAT HONOURS BACKTICKS EXECUTES IT — AND
+  THE TOKENS IT EXECUTES ARE THE ESTATE'S OWN TOOLS. Added 2026-09-02, first-hand, a curator's own.**
+  ⛔ **IT IS NOT A HEREDOC RULE — THREE CONTEXTS SUBSTITUTE, TWO DO NOT, AND A RULE WRITTEN ABOUT
+  HEREDOCS DOES NOT REACH THE OTHERS.** Curator-measured on-device 2026-09-02, one command, four
+  arms: `<<EOF` **substitutes** · `<<'EOF'` **literal** · double quotes **substitute** · single
+  quotes **literal**. **A double-quoted `echo` carrying corpus prose has the identical defect.**
+  ⚠ **The first diagnosis named the CONSTRUCT instead of the MECHANISM** — the same error shape as
+  the rest of this family, keyed to a form rather than to what the form does.
+  **THE INSTANCE:** a `regression-log.md` entry was written through an **unquoted** heredoc *so that
+  `$TS` would expand* — which also armed every backtick in the payload. One pair ran and **deleted
+  the word**, leaving `Mode , applied…`. ✅ **Repaired with a counted `n == 1` edit and re-diffed to
+  identical; the file is correct** (`regression-log.md`, the 2026-09-02-19-06-29 entry, which
+  carries the narrative). ⛔ **DETECTION WAS LUCK, NOT METHOD: the token that fired is not a
+  command, so it errored VISIBLY. Any backticked token that IS a command substitutes at rc 0,
+  leaving the command's output where the word was, with no error anywhere.** ⚠ **It fired AGAIN
+  during the pass that filed it** — a double-quoted `echo` in a curator tool call printed
+  `Command '<token>' not found`, reproducing the incident in a construct the first diagnosis had
+  not named. **Two firings, two different constructs, one hour apart.**
+  ⛔ **WHY THIS CORPUS SPECIFICALLY: ITS MOST-BACKTICKED TOKENS ARE LIVE COMMANDS, AND THE TOP TEN
+  ARE THE ESTATE'S OWN TOOLS.** Curator-measured 2026-09-02 across the 73 corpus files (T0,
+  `/root/docs/*.md`, T2, `memory-curation/*.md`), extracting single-word backticked tokens and
+  testing each with `shutil.which`: **order-400 distinct live commands over order-4,000
+  occurrences**, led by `rogueap`, `lanmitm`, `wificonnect`, `cmp`, `grep`, `usbgadget`,
+  `hcxcapture`, `hidrun`. ⛔ **So the failure is not text corruption — it is BARE INVOCATION of
+  radio, gadget and MITM tooling from inside a documentation edit.** ⚠ **NO EXACT FIGURE IS
+  RECORDED HERE ON PURPOSE, AND IT IS NOT TIDINESS:** two independent runs within the hour,
+  differing only in the extractor, returned **3,140 vs 7,298** distinct tokens and **366 vs 466**
+  live commands — **the ranking was stable to ±1 and the magnitude was not.** **The SHAPE is the
+  durable fact; the count is a probe artefact. Re-derive it, and name the extractor when you do**
+  (§*One tier owns a number*).
+  ⚠ **ONE SIDE EFFECT IS ESTABLISHED AND THE REST ARE NOT — DO NOT LEVEL THEM.**
+  `catch-boot-warn` writes a dmesg capture to `/root/boot-logs/` on a bare run: **verified by
+  source** (unconditional write, and the tool's own comment says an accidental invocation still
+  writes) **and observed on-device 2026-09-02**. ⛔ **What `diagcap`, `usbgadget` or `rogueap` do on
+  a bare invocation is UNTESTED, is not asserted here, and must not be resolved by running one.**
+  ⭐ **THE REMEDY IS NOT "ALWAYS QUOTE", BECAUSE THE UNQUOTED FORM IS REACHED FOR ON PURPOSE.** You
+  choose it when you want ONE legitimate expansion, and that single convenience arms every backtick
+  in the payload — so *"always quote"* is advice that loses to the reason you deviated.
+  **The form: QUOTE THE DELIMITER AND INJECT THE VARIABLE ANOTHER WAY** — build the string first,
+  or `sed` a placeholder afterwards. ⭐ **Better still, keep the payload out of the shell entirely:
+  read it from a file in the same program that writes it.**
+  ⭐ **AND THE DETECTION METHOD IS WORTH MORE THAN THE RULE: STAGE THE DRAFT, THEN `cmp` AFTER THE
+  WRITE.** ⛔ **Reading it back and finding it PLAUSIBLE detects nothing** — a substitution that
+  deletes a word or splices in a command's output leaves prose that still reads. It is
+  *assert that what you did NOT edit survived* pointed at the **payload** instead of the file, and
+  *the load-bearing check runs on the far side of the irreversible step* with the write as the
+  irreversible step. ⛔ **AND THE STOP CONDITION IS THE LOAD-BEARING HALF: ON A FAILED `cmp`,
+  RESTORE FROM THE SNAPSHOT — DO NOT REPAIR IN PLACE.** A repaired file and an undamaged one are
+  indistinguishable afterwards, which is this hazard's entire subject.
+  ⚠ **PICK THE RIGHT CONTROL, AND THE WEAKER ONE WAS USED FIRST.** `$`-survival proves only that a
+  **delimiter was quoted**: it covers the heredoc arm and is **silent on the double-quote arm**,
+  which is the live one. ⛔ **AND THE CONTROL THIS ENTRY FIRST NAMED — BACKTICK *BALANCE* — CANNOT
+  FAIL FOR THIS DEFECT AND MUST NOT BE USED.** A substitution consumes the whole ``` `token` ```,
+  **both backticks**, so it changes the count by an EVEN number and **parity is preserved under any
+  number of substitutions.** Proven by arithmetic 2026-09-02, hours after this same corpus catalogued
+  two peer simulations whose positive controls could not fail: **a control that cannot fail was
+  written into the entry about detection, in the entry about detection.**
+  ✅ **What IS valid from that measurement is TOKEN SURVIVAL — the damaged pair was checked and found
+  intact by NAME.** ⚠ **And whole-file parity is worse than useless: `REGRESSION.md` is legitimately
+  ODD (1723 before an edit, 1751 after — delta 28, even), so reading parity raised a false alarm that
+  only the snapshot settled.** ⭐ **The instrument is the DELTA across the edit against a known
+  reference, or `cmp` against a staged draft — never a property of the file alone.** ⚠ **A pass that appends
+  DIRECTLY has no staged draft to `cmp` against and has therefore run no check** — the corpus after
+  such a pass is **un-contradicted, not known-clean**, and that is the honest way to report it.
 - ⛔ **NEVER `git checkout` TO UNDO A SCRATCH EDIT — copy the file aside instead.** Added
   2026-08-11 after a `git checkout` intended to discard a temporary change **reverted uncommitted
   work in the same file**. `git checkout -- <path>` restores the whole path from the index; it has
