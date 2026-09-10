@@ -1203,6 +1203,14 @@ supposed to grow.
     perfectly and answers a **different** question. `PRECONDITIONS.md` **P-82** (`G8`); siblings
     **Q92** (the gate's input set) and **Q93** (the repository object, which no file-content gate
     reads).
+    ⚠ **AND A MARKER COUNT IS NOT A RETRIEVAL COUNT — added 2026-09-10, the third qualification.**
+    Forks, stars and watchers count accounts that **marked** the repository; the forge's traffic API
+    counts **clones**, i.e. retrievals, over a rolling window. ⛔ **An answer offering stars or forks
+    as the audience bound offers the wrong instrument** — and once a retrieval has happened, **no
+    later operation on the repository reaches that copy**, which is what makes a clone figure the
+    number deciding whether a remediation is containment or only cosmetic. ⚠ **A rolling window
+    expires, so a clone figure is a dated RECORD and never state** — and a low one bounds the
+    audience **now**, exactly as the fork/star/watcher qualification above does.
 
 ### Added 2026-08-19 (the hardware request with nothing in it)
 

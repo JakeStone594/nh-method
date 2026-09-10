@@ -366,6 +366,24 @@ For each candidate fact, in this order:
    Unlike a stale fact, the wording is yours, so you know the exact string. ⚠ **`regression-log.md`
    is the exception and must NOT be edited** — its entries are evidence records of what a pass did,
    correct as history; supersede them **forward** with a new entry (record vs guidance, above).
+   ⛔ **AND ONE PASS WRITES THE SAME NOT-TAKEN FACT IN SEVERAL DIFFERENT WORDINGS, SO THE SWEEP
+   ABOVE — ANCHORED ON *YOUR OWN WORDING*, WHICH IS WHAT MAKES IT WRITEABLE — REACHES EXACTLY ONE OF
+   THEM. Added 2026-09-10.** The clause above says the wording is yours, so you know the exact
+   string. **You know ONE of them.** Curator-measured that day: **four** notes of this class written
+   by one session in one day, across T2, T3 and the contract's checklist — *"the operator has NOT
+   been asked"* · *"No history action taken, deliberately"* · *"NOT PROPOSED FOR CLOSING"* ·
+   *"exactly one file is deliberately short"*. **No two share a distinctive fragment**, so a
+   `grep -rlF` on any one reaches that note and no other; the prescribed sweep WAS run, returned
+   *"exactly one live site"*, and was right about the string and wrong about the fact.
+   ⚠ **The fourth returned ZERO line-scoped and 1 whitespace-normalised — a wrap, not an absence**,
+   which is `REGRESSION.md` §*Method*'s trap firing inside the sweep written to catch this class.
+   ⭐ **THE OPERABLE FORM: SWEEP FOR THE ACTION, NOT FOR YOUR SENTENCE** — the verb the note declines
+   (*asked*, *proposed*, *filed*, *applied*, *ruled*) — **and keep a per-pass ledger of the not-taken
+   notes you write, re-read at close.** ⚠ **A sweep is a point-in-time act inside a pass that keeps
+   writing: a note written AFTER it is true when written and stale by the end of the same pass.**
+   ⛔ **THE RECURRENCE IS THE FINDING, NOT THE INSTANCES — the third landed INSIDE the entry
+   documenting the first two, same day, same author. Correcting the shape at a site does not
+   immunise that site.**
    ⛔ **AND AN IDENTIFIER IN A PERMISSION OR SCOPE DOCUMENT MUST BE SELF-DESCRIBING — AN ARBITRARY
    LABEL INVERTS SILENTLY AND ITS OWN AUTHOR DOES NOT NOTICE. Added 2026-08-27.** The sibling clause
    above is about a value going STALE; this is about one being read BACKWARDS, which no re-derivation
