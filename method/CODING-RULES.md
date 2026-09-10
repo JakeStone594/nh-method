@@ -307,7 +307,20 @@ refuses a vif it cannot arm, and verifies both directions — in 58 lines on top
     awk 'END{print NR}' <file>            # bigger than last time? justify each line
     comments ÷ lines                      # over ~15% means rule 1 or 2 is being broken
 
+When one tool composes another's flags, the composer lags it silently — nothing links the
+two, so a flag added to the tool is invisible until someone wires it in:
 
+    for f in $(/usr/bin/grep -oE -- '--[a-z-]+\)' <tool> | tr -d ')' | sort -u); do
+      /usr/bin/grep -q -- "$f" <composer> || echo "NOT IN COMPOSER: $f"; done
+
+⚠ **It over-reports, and reading the noise is part of running it**: a long flag the composer
+emits in its short form, and a flag the tool only *rejects*, both read as gaps. On
+`rogueap`/`rogueap-menu`, 2026-08-31, it named eight and two were real. ⚠ **`sort -u` is not
+cosmetic** — a parser that lists a flag in two `case` arms reports it twice, and a duplicate
+reads as two findings.
+
+⚠ **The `\b[12]\.[0-9x]\b` arm of the first grep hits `2.4 GHz`.** A band is not a version;
+read the matched line, never the count.
 
 
 ---
