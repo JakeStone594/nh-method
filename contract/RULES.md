@@ -1815,6 +1815,16 @@ number until the move lands. Patching one tier while copying the other is exactl
   reference, or `cmp` against a staged draft — never a property of the file alone.** ⚠ **A pass that appends
   DIRECTLY has no staged draft to `cmp` against and has therefore run no check** — the corpus after
   such a pass is **un-contradicted, not known-clean**, and that is the honest way to report it.
+  ⚠ **THE FOUR-ARM TABLE ANSWERS *SUBSTITUTION* ONLY, AND THE ARM IT MARKS LITERAL IS THE ONE CORPUS
+  PROSE TERMINATES. Added 2026-09-10.** `<<'EOF'` and `'…'` are the same arm for backticks and are
+  **not** the same arm for prose: a single-quoted `bash -c '…'` is closed by the first apostrophe in
+  the payload, so *"this file's own checklist"* ends the string and the command dies on a parse
+  error. **A reader picking the literal row of that table to carry corpus prose picks the one form
+  prose can break.** ⚠ **It fails LOUDLY — nothing is written, which is why it is a qualification and
+  not a sibling entry** — but it sends you back to the unquoted form the clause above exists to
+  forbid. **The remedy is already stated and is unchanged: keep the payload out of the shell** —
+  write it from the program that composes it and pass a file (`git commit -F`), which is what the
+  quoted heredoc buys you and a quoted argument does not.
 - ⛔ **A DESTRUCTIVE READ MUST NOT SHARE A PIPELINE WITH AN OUTPUT-SHORTENING STEP — the READ-side
   twin of *stage the draft, then `cmp`* above. Added 2026-09-02, first-hand.** A delete-on-read
   capture was piped through `sed -n '1,30p'` for readability: **the shortening survived and the data
