@@ -1409,6 +1409,30 @@ did not exist.
   as backspace and answers 0 with no error.** So this clause steers you into a silent zero the moment
   you reach for `awk` instead of `grep`: `PRECONDITIONS.md` **N-89** owns the A/B and the honest
   forms (`\y` in gawk, or count with `/usr/bin/grep -cE` and say which binary).
+- ⛔ **AN ALTERNATION'S COUNT BELONGS TO THE UNION, NEVER TO A MEMBER. Added 2026-09-10.**
+  `grep -c 'a\|b\|c'` answers *how many lines matched ANY arm*; attributing it to the arm you cared
+  about is a claim the probe never made — and the integer is honest, so nothing objects. Measured
+  that day: a gate was reported as holding **2** hits for the FIRST arm of a three-arm alternation
+  over tool names; that arm's literal count was **0** and both hits belonged to a different arm.
+  **The wrong attribution went into a written correction.** ⭐ **Count ONE ARM AT A TIME, or print the
+  matches and read which arm each one is.**
+- ⛔ **A CONFIDENT NON-ZERO HAS NO CONTROL IN THIS CONTRACT — AND THAT, NOT EITHER MECHANISM ABOVE,
+  IS THE LOAD-BEARING HALF. Added 2026-09-10.** Every control §*Classification order* prescribes
+  separates *did not run* from *nothing there*: a positive control that must **hit**, the inverted one
+  a classifier must **not** condemn, and one drawn from a **different sample**. ⛔ **ALL THREE PASS ON
+  A NUMBER THAT IS HONEST ABOUT THE WRONG THING**, because the probe ran, matched, and returned a
+  well-formed integer — there is no error channel and no arm left to fail. Three self-caught instances
+  in one session, 2026-09-10, three different mechanisms and **none of them zero**: **49** (`LTE`
+  unbounded, matching inside `filter`, `consulted` and `netfilter`; `\bLTE\b` is **0**), **2** (the
+  alternation above), and **109** against a true **107** (a word-bounded id pattern hitting two ids
+  that occur ONLY inside a sentence asserting they do not exist — `REGRESSION.md` Q58's *every hit is
+  READ, never counted*, arriving in a numbering audit instead of a skill sweep).
+  ⭐ **THE TYPED FORM: BEFORE A COUNT BECOMES A CLAIM, PRINT ONE MATCHED LINE AND READ IT.**
+  §*Classification order* already prescribes exactly this remedy — *"PRINTING THE CANDIDATE LINES IS
+  THE REMEDY, at any scale, including a scale of one"* — **and scopes it to an EDIT. A count needs it
+  too, and it costs one line.** ⚠ **THE FIRST OF THE THREE IS THE BULLET ABOVE RECURRING, NOT A NEW
+  FINDING** — the same error in the same direction **30 days** after the 2026-08-11 `hcat`/`hashcat`
+  instance that wrote it. **A filed clause is not protection; the recurrence is the finding.**
 - **Quote a number only from the artefact it describes** — not from a doc about the artefact, and
   not from an earlier pass over it. That single property is what both failures lacked.
   ⛔ **THIS CLAUSE GOVERNS SOURCING AND NOT RECONCILIATION, AND BOTH SEATS CAN SATISFY IT WHILE THE
