@@ -181,6 +181,16 @@ chains and rules, and any daemon it starts.
 > **Do not start the next test until the RVB is clean.**
 > **Two stranding tests must never run back-to-back.**
 
+⚠ **"CLEAN" IS NOT "BYTE-IDENTICAL", AND SAYING SO IS PART OF THE VERDICT.** If the snapshot
+includes socket state, **over a run-length window expect ephemeral-port churn from the host OS**
+and score the diff as **`0 non-ephemeral differences`**, naming the exclusion. ⚠ **Do not write
+*"never byte-identical"*** — that is a claim about all timescales and it is false: measured, two
+`ss -uan` reads **4 s** apart were **byte-identical, 0 diff lines**, while an **18-minute** campaign
+window differed on exactly four ephemeral UDP lines. ⭐ **The exclusion must be stated with the
+verdict, never applied silently** — an unstated exclusion is how a real difference gets waved
+through, and a check that never fires is untested (`RULES.md` §*Safety*).
+
+
 ### 3.4.1 When the test breaks its own transport. Added 2026-08-15, from `T10`
 
 Some tests take away the link the tester is running over. `T10` took `wlan0`, **the phone's only
@@ -220,6 +230,71 @@ These are cheap to restate and expensive to rediscover. Cite the clause; do not 
   expect it in every diff. **Sweeping is itself a write** — do it before, never mid-campaign.
 
 ---
+
+
+### 3.6 A two-machine test — the ACTING side must start the OBSERVING side
+
+⛔ **AN OBSERVATION WINDOW ON ONE MACHINE CANNOT BE HAND-SYNCHRONISED WITH AN ACTION WINDOW ON
+ANOTHER, AND THE FIX IS STRUCTURAL RATHER THAN MORE CARE.** Measured across a two-machine campaign —
+capture on one machine, client script on the other: **5 arms out of 8 were lost, every one the same
+way — the capture window and the traffic did not overlap.** It cost four wasted arms and nearly cost
+the campaign's one clean artefact.
+
+⚠ **It does not present as a synchronisation problem.** A capture that ran and caught nothing is
+**indistinguishable from a negative result**, so each lost arm reads as evidence rather than as a
+missed measurement, and the natural response is to doubt the hypothesis. ⭐ **A blank capture is not
+a negative — score it as NOT MEASURED** (§6; INCONCLUSIVE is never rounded to FAIL).
+
+**Two acceptable designs, and nothing else is:**
+
+1. **The acting script STARTS the capture** — one clock, no coordination.
+2. **The capture runs CONTINUOUSLY for the whole arm and is sliced afterwards** by timestamp.
+
+⚠ **Two operators typing at each other cannot hold a 150 s window**, and neither can one operator
+driving two machines. ⭐ **Write down, in the test block, WHICH of the two designs the arm uses**
+(§5) — an arm whose block does not say is an arm that will be lost.
+
+---
+
+### 3.7 Driving an INTERACTIVE tool against stubbed state
+
+A menu's screens cannot be exercised by `--dry-run`, and standing up the state they display costs
+real infrastructure and a teardown. **Source the tool as a library, stub its state readers, and
+drive the result under `tmux`:**
+
+```bash
+sed '/^need_root$/,$d' <tool> > lib.sh            # cut at the entry point
+# then in a wrapper: . lib.sh; live_run() { :; }; state_val() { … }
+tmux new-session -d -s t -x 56 -y 24 'bash wrapper.sh'; tmux capture-pane -p -t t
+```
+
+⛔ **`tmux`, NOT a synthetic pty** — a TUI widget library may block on the OSC-11 and cursor-position
+replies, and its text widgets then never receive printable characters. That is why this works at
+all, and it is not a detail to economise on.
+
+⛔ **WHAT IT PROVES IS RENDERING, LAYOUT AND KEY DISPATCH — NOTHING ELSE.** Every value on screen came
+from the stub, so **no reading is evidence about the machine**, and a screen that renders correctly
+says nothing about whether the action behind it works. ✅ **What it does buy: several terminal widths
+in one pass** (56/60/80/90 caught three truncated headers that a single width would have shipped),
+**and zero state changed** — verify that afterwards rather than assuming it.
+
+⭐ **THE STUB IS ALSO THE INSTRUMENT'S LIE, AND IT SHOWED ITS OWN LIMIT.** With the menu's liveness
+predicate stubbed **true**, a sibling tool launched from it still reported *no live run* — because it
+probes the machine itself. **That is the correct outcome and not a failure of the harness**, but note
+the shape: the stub makes the tool under test disagree with everything it shells out to, so **any
+cross-tool agreement observed under this harness is meaningless, and any DISagreement is expected
+rather than a finding.** §6's *the harness is an instrument and it can lie* applies with the sign
+reversed — here the harness is knowingly false and the risk is reading its falsehood as a result.
+
+⭐ **AND WHEN THE VIEW UNDER TEST IS ITSELF A CREDENTIAL SURFACE, SCORE IT STRUCTURALLY.** A loot view
+can be exercised against **historical run dirs**, read-only, with **no live infrastructure and no
+state change** — cheaper than a live capture, and often the only arm actually outstanding. Where a
+standing instruction forbids rendering captured output into a reply at all, the pass criteria must be
+**shape, not content**: block counts, column alignment, and the accounting line with its digits
+normalised to `N`. ⛔ **State the disposal accurately: capture to a file, check, then UNLINK — and
+call it unlinking.** On a log-structured or copy-on-write filesystem `shred` is **not** destruction,
+so *"securely destroyed"* is a claim most estates cannot support; only a tmpfs earns it
+(`PRECONDITIONS.md` **P-95**).
 
 ## 4. Ordering — the rules, not the sequence
 
@@ -443,6 +518,41 @@ not naming the subject; the tool may still prefer something else it found.
 environment clean, output read rather than exit code — and still wrong, because those all police
 *how* the measurement was taken and this one is about *what was measured*. **Add the subject to the
 snapshot**: record which resource the tool selected, not only what it reported.
+
+---
+
+
+### The fifth shape — the harness identified its SUBJECT BY NAME PATTERN, and matched a decoy the system under test raises exactly when the interesting state occurs
+
+The four above are a harness that measures itself, one that cannot pass, one that changed the
+environment, and one that let the *tool* choose the subject. **In this one the harness chose the
+subject — by regex on an interface NAME — and the environment supplied a second object that matched
+it.**
+
+**The instance.** A detector decided whether a client's VPN was up by matching interfaces against a
+vendor-name regex. It matched the VPN client's own **kill-switch dummy interface**, and reported
+*"VPN up / CONFIRMED"* over **1644 consecutive samples** while the tunnel was down — contradicted by
+a same-window capture holding **0** tunnel packets.
+
+⛔ **THE PROPERTY THAT MAKES THIS ITS OWN SHAPE, AND IT IS NOT BAD LUCK: THE DECOY IS RAISED *BY* THE
+FAILURE UNDER TEST.** The kill switch brings that interface up precisely **when the tunnel drops**,
+so the probe was **most wrong exactly when the state was most interesting** — a systematic bias
+toward the answer the tester wants, not noise. ⚠ **Re-running does not clear it, more samples make it
+look stronger, and the failure has no signature**: every sample is a real interface, correctly named.
+
+⭐ **The fix is to derive the subject from the MECHANISM, not from a label:** read the VPN's own
+`ip rule` → the table it names → the `default dev <IF>` inside that table. **A name is a claim
+somebody else controls; a rule is the thing that decides the packet.**
+⛔ **AND STATE THE SURVIVING LIMIT — THE FIX IS NARROWER THAN IT FEELS.** That reads the tunnel's
+**CONFIGURATION, not its LIVENESS**: the VPN table's default stays installed after the tunnel has
+stopped passing packets. **Pair it with a capture or a liveness check**, and say which of the two a
+green covers.
+
+⚠ **Same family as `PRECONDITIONS.md` **P-67** — classify a radio by DRIVER, never by a netdev name —
+arriving in the harness instead of in a tool.** Two instances of the identify-by-name failure landed
+in one session, hours apart: this one, and the `iw … station dump` row (**P-102**). **When a probe
+has to name a thing, ask what else on the box could wear that name, and prefer the property that
+cannot be renamed.**
 
 ---
 
