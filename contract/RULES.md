@@ -328,6 +328,37 @@ For each candidate fact, in this order:
    `/usr/bin/grep -rniE 'do not re-derive|no need to (check|verify)|already verified|trust the (table|list)|do not use'`
    ⚠ **And prefer a DERIVATION to a value wherever the fix allows it** — `find <outdir> -name '*.ko' | wc -l`
    cannot go stale, *"three"* always will.
+   ⛔ **AND A DERIVATION IS ONLY BETTER THAN THE VALUE ONCE IT HAS BEEN EXECUTED — AN UNRUN ONE IS
+   A STALE VALUE WITH A CONFIDENT FACE ON IT. Added 2026-09-05.** The clause above tells you to
+   substitute a command for a literal, and **making the substitution is what feels like the fix**,
+   so the single step that could falsify it — running it — is the one that gets skipped.
+   **Two instances the same day, both self-caught, failing in the two available directions:** a
+   `KERNEL-V2.md` rollback glob that RESOLVED to the wrong member (the misranking clause below
+   owns it), and a `git log --since=<bare date>` written into `/root/docs/HANDOFF.md` that
+   resolved fine and **BEHAVED** wrongly — a confident empty, at rc 0, about commits that exist
+   (`PRECONDITIONS.md` **N-131**, which owns the measurement and the falsified timezone theory).
+   ⚠ **The second is the harder half: expanding a glob shows you its hits, whereas running a query
+   shows you a plausible number** — so only a known expected answer catches it. ⭐ **The typed
+   form: run the derivation and put its OBSERVED output beside it in the same edit.** A derivation
+   with no recorded observation is an unverified claim wearing the costume of a probe.
+   ⛔ **AND THE STALE IMPERATIVE YOU ARE MOST LIKELY TO LEAVE STANDING IS ONE *YOU* WROTE, BECAUSE
+   COMPLETING THE ACTION IS WHAT FALSIFIES IT AND NOTHING IN THE COMPLETION LOOKS LIKE A DOC EDIT.
+   Added 2026-09-05.** The clause above is the world moving under an instruction; this is **you**
+   moving. A note recording why something was **NOT** done — *"left firing for an operator ruling"*,
+   *"filed HERE and NOT there, so do not go looking"*, *"a SEPARATE DECISION THE OPERATOR HAS NOT
+   TAKEN"*, *"NOT APPLIED, DELIBERATELY"* — is an imperative telling the next reader not to look, and
+   **taking the action is the one act that never triggers a sweep**, because it edits a tool, a
+   `.gitignore` or a repo rather than the file carrying the note. ⚠ **Four instances on 2026-09-05,
+   and the split is the evidence: two were caught by their author within the hour, two were found
+   only by an audit at the end of the day** — self-caught, `.gitignore`'s *"deliberately left
+   firing"* and `nh-tools-mirror-exclusions.md`'s *"do not go looking"* cross-reference; **live and
+   uncaught**, that same memory's *"is left firing for an operator ruling"* and `PRECONDITIONS.md`
+   **P-138**'s closing NOTE, **both falsified by a single commit that touched neither file**.
+   ⭐ **The check is not vigilance, it is a grep you can actually write: WHEN YOU TAKE AN ACTION YOU
+   HAD RECORDED AS NOT-TAKEN, SWEEP THE CORPUS FOR YOUR OWN NOT-TAKEN NOTE BEFORE CLOSING THE PASS.**
+   Unlike a stale fact, the wording is yours, so you know the exact string. ⚠ **`regression-log.md`
+   is the exception and must NOT be edited** — its entries are evidence records of what a pass did,
+   correct as history; supersede them **forward** with a new entry (record vs guidance, above).
    ⛔ **AND AN IDENTIFIER IN A PERMISSION OR SCOPE DOCUMENT MUST BE SELF-DESCRIBING — AN ARBITRARY
    LABEL INVERTS SILENTLY AND ITS OWN AUTHOR DOES NOT NOTICE. Added 2026-08-27.** The sibling clause
    above is about a value going STALE; this is about one being read BACKWARDS, which no re-derivation
@@ -337,6 +368,21 @@ For each candidate fact, in this order:
    ⚠ **The author of the grant could not hold it, and a cold session has strictly less context**;
    renamed to *the MAIN laptop* / *the VULNERABLE laptop* the same day. ⭐ **The name must carry the
    property the rule turns on** — here *which machine may have credentials harvested off it*.
+   ⛔ **AND THE SAME INVERSION HITS A DIRECTION, WHICH IS NOT A NAME AND SO ESCAPES THE CLAUSE ABOVE
+   — added 2026-09-03. A DIRECTION IS THE HALF MOST OFTEN STATED BACKWARDS, AND CHECKING THE FACT DOES
+   NOT CATCH IT**: *ahead/behind*, *newer/older*, *fails toward clean / fails toward absent*,
+   *device→repo / repo→device*. **Four in one day** on 2026-09-03 alone — *"the repo is ahead of the
+   device"* when they were byte-equal (acting on it would have synced repo→device and reverted the
+   corpus), a doc gap reported open that was already closed, and two claims about another session's
+   state inverted in opposite directions. The corpus is full of older ones: `Laptop 1`/`Laptop 2`, the
+   gid 3003/3004 name inversion, `wc -m` reading a ceiling backwards, **and `PRECONDITIONS.md` N-95,
+   where the row and its proposed fix were wrong in OPPOSITE directions.**
+   ⭐ **THE REMEDY IS A TYPED FORM, NOT MORE CARE: state a direction as an ORDERED PAIR OF MEASURED
+   VALUES, never as a word.** *"device 156,527 B / repo 155,820 B"* cannot invert; *"the device is
+   ahead"* can, and reads identically either way. ⚠ **Same family as *report ACHIEVED, not
+   REQUESTED*** (T2 [[report-achieved-not-requested]]) — **a word for a relation is a summary, and a
+   summary is where the polarity is lost.**
+
    ⚠ **Scope it to identifiers a RULE DISCRIMINATES ON**, not to every name: `hci0`, `wlan1` and
    `P-102` are fine, because no permission or refusal hangs on the numeral. ⛔ **A half-rename is
    worse than either name**, so sweep every tier in the same unit — and note this is the document-side
@@ -449,6 +495,28 @@ For each candidate fact, in this order:
    is the claim worth having, **and a planted positive line is the only cheap thing that separates
    them.** ⚠ **Note that this is NOT the same as the counted-edit assertion in §*Safety*** — that one
    proves your belief about a file; this one proves the instrument can see its target at all.
+   ⛔ **AND FOR A *CLASSIFIER* THE CONTROL IS INVERTED — A KNOWN-HEALTHY MEMBER THE CRITERION MUST
+   *NOT* CONDEMN. Added 2026-09-05.** Everything above is scoped to a SEARCH, where the control is a
+   string that must **hit**. **A criterion that sorts a population needs the opposite control**, and
+   the two are not interchangeable: a must-hit control tells you the instrument runs, and says nothing
+   about whether the rule it encodes is the right rule. ⭐ **THE TEST: if a single-axis probe would
+   classify a member you KNOW to be healthy as dead, the AXIS is wrong — not the member.** **Instance,
+   RELAYED from the host session 2026-09-05 and not re-derivable here:** censusing documents by
+   extractable-character count alone marked **five** dead, of which **three were sound image-only
+   scans** — pages and images present, no text by design. **The second axis was not a refinement; it
+   was the thing that separated the population**, and without it the owner would have hunted three
+   phantoms alongside two real losses, each looking exactly as dead until opened.
+   ⚠ **AND WHICH WAY A BROKEN PROBE FAILS IS NOT COSMETIC — MISRANKING COSTS MORE THAN UNIFORM
+   FAILURE.** A probe that fails toward *"both candidates look dead"* wastes nothing; one that fails
+   toward *"**this** one looks recoverable"* **spends real effort on the wrong artefact, and the
+   effort itself reads as diligence** — so nobody re-examines the ranking that directed it. Two
+   instances: a `strings`-based structure probe rated the *more* damaged of two carves the *more*
+   promising, because its dangling references have no operator drawing them (**relayed, host
+   session**); and the `KERNEL-V2.md` glob that would have named the **post-fix** build as the source
+   of the bug it was fixed to remove (**on-device, filed at its site 2026-09-05**). ⛔ **Two instances
+   is not a taxonomy and this is deliberately NOT declared as a category** — it is a clause on *a
+   probe inherits its author's assumption*, which both instances are. ⭐ **Where you must choose, bias
+   a probe toward failing FLAT rather than toward preferring a candidate.**
    ⛔ **THE ASYMMETRY THAT MAKES THIS WORTH A CLAUSE RATHER THAN A HABIT: A FALSE CLEAN ABOUT YOUR
    OWN CORPUS HAS NO NATURAL ADVERSARY.** A false *accusation* about someone else's is loud, arrives
    in front of a party who can refute it, and gets corrected within the hour. A false *clean* about
@@ -509,6 +577,19 @@ For each candidate fact, in this order:
    the second is checkable.** ⚠ **And a decision NOT to file is also a fact about the corpus — it
    is the one nobody reports.** Silence after *"I will consider it"* is indistinguishable from
    having filed it: two states, one output.
+   ⛔ **AND THE MECHANISM, WHICH THE CLAUSES ABOVE DESCRIBE WITHOUT NAMING — THE PEER'S FORMULATION,
+   2026-09-03, and it is the part with teeth: THE AUTHOR OF A RULE IS THE LAST PERSON TO NOTICE THEY
+   HAVE NOT FILED IT, BECAUSE FOR THEM IT IS NOT A FACT TO BE RECALLED — IT IS JUST WHAT THEY THINK.**
+   Satisfaction and the acknowledged-message account above explain why filing feels done; **this
+   explains why it never feels undone.** ⚠ **The instance is the sharpest available: the peer's own
+   rule *never assert the other corpus's state* was being filed HERE under §*NAME THE ORIGINATOR*,
+   which is what sent them looking for an existing owner — and they found they had never filed it
+   themselves. The rule against assuming a fact propagated was sitting unpropagated.**
+   ⛔ **IT BINDS THE CURATOR HARDEST, because the curator is the component that AUTHORS rules: a rule
+   formulated mid-pass and acted on is at exactly this risk, and the pass will feel complete.**
+   ⭐ **So the sweep below must include rules you INVENTED during the pass, not only claims you made
+   about the corpus.**
+
    **The check: after any pass, grep the corpus for every claim you made ABOUT the corpus** — not
    your memory for having made it. `/usr/bin/grep -rl '<the claim>' <tiers>`, one line per claim.
    ⚠ **Give that audit a positive control** (a string you know is present) **and a negative control**
@@ -562,7 +643,21 @@ CLAIM DOES. Added 2026-08-23.** A correction and a claim arrive through the same
 **same reflexive acceptance**, so an unlabelled *"actually, it's X"* is adopted exactly as fast as an
 unlabelled assertion. ⛔ **The failure mode is BUNDLING: an item you reasoned to, sent in the same
 packet as one you measured, inherits the measured one's credibility — and nothing in the packet
-distinguishes them.** ⭐ **The fix is SENDER-SIDE and costs one word.** It cannot be receiver-side:
+distinguishes them.** ⭐ **AND THE REASON, THE PEER'S FORMULATION 2026-09-03: CONFIDENCE IS NOT
+CARRIED IN THE CLAIM — IT IS CARRIED IN THE PACKAGING, AND PACKAGING IS WHAT A RELAY DROPS.** A hedge,
+a label, an *"I think"* is metadata riding beside the sentence, and forwarding keeps the sentence and
+sheds the metadata — **so the receiver is not careless, they are structurally unable to recover it.**
+⚠ **It unifies two instances from one day:** a `_30_0` causal claim that travelled because the
+verdict beside it was measured, and a false statement packaged as a **caveat**, which nobody audits.
+⛔ **A THIRD — A CURATOR *INFERENCE* RELAYED ONWARD AS A FINDING — LOOKS LIKE THESE AND IS NOT, AND
+THIS CLAUSE LISTED IT AS ONE UNTIL 2026-09-03. NO HEDGE WAS EVER APPLIED AT ORIGIN, SO NOTHING WAS
+DROPPED IN TRANSIT.** That is the **opposite** failure with the **opposite** remedy — packaging never
+applied, fixed on the **author**, not packaging lost, fixed on the **relayer** — ⭐ **and merging them
+hides that it is the MORE DANGEROUS of the two, because there is NO LOST SIGNAL TO NOTICE and every
+downstream party is then CORRECT to treat it as a finding.** Both halves, their instances and why they
+must not be re-merged: T2 [[agent-measurements-vs-judgements]], the two-halves paragraph.
+⚠ **Both remedies are still SENDER-side — what differs is WHICH sender, the author or the relayer.**
+⭐ **The fix is SENDER-SIDE and costs one word.** It cannot be receiver-side:
 **the receiver is precisely the party with no way to tell**, which is why *"they should have tested
 it"* is not a remedy. ⚠ **And an unlabelled claim you send lands somewhere your own T3 cannot
 reach** — a retraction filed here does not un-install it there. Instance, and the mechanism it
@@ -678,6 +773,15 @@ be worth nothing; afterwards the two cases are indistinguishable.** ⇒ **The re
 of DIVERGENCE, not at the moment of agreement** — which is the same *binds at the moment of writing or
 not at all* the limitation clause states, pointed at the case worth keeping rather than the case worth
 fearing.
+⭐ **AND THE CONSTRUCTIVE FORM — HOW TO MAKE TWO PARTIES INDEPENDENT IN THE FIRST PLACE: DIVIDE
+METHOD, NOT SCOPE.** `CLAUDE-HARNESS.md` §8.6 owns it and its worked instance. **Two agents running
+the SAME probe over the same objects agree and are both wrong — and the agreement is then read as
+corroboration, which is worse than either being wrong alone.** Splitting the OBJECTS buys nothing;
+splitting the METHOD is what makes a conflict possible, and the conflict is the only detector this
+section's limitation clause leaves you. ⚠ **Deliberately a pointer: the rule was independently
+written into the peer's own corpus in the same words, and that is ONE CLAIM IN TWO LOCATIONS, NOT
+TWO WITNESSES** — this section's own restatement-as-corroboration hazard, arriving inside the
+paragraph about it.
 ⚠ **THE GENERAL FORM OF ALL OF THIS IS NOT HERE — it is `CLAUDE-HARNESS.md` §8.6**, widened the same day
 to *a claim loses its qualifier while crossing between sessions*, of which restatement-as-corroboration
 (this section) is one of three instances. **Deliberately a pointer and not a restatement:** three rows
@@ -738,6 +842,76 @@ two supporting instances are on-device and curator-read: `PRECONDITIONS.md` **P-
 *rises* caveat, and `CORRECTIONS.md` 2026-08-19 §*A PREDICTION IN THE VOICE OF A MEASUREMENT*. Both
 refusals are curator-checked against this file and against T3. Nothing here is a measurement.**
 
+⛔ **THE TAG ASSUMES MACHINES ARE DISTINGUISHABLE BY NAME. TWO ARE NOT, ON TWO DIFFERENT AXES —
+added 2026-09-05.** Everything above tells you to name the device. **Neither axis below gives you a
+name that discriminates**, so the rule can be followed exactly and still produce a wrong-machine
+fact.
+
+**AXIS 1 — TWO MACHINES BEHIND ONE NAME.** The laptop **host** and the recovered laptop **VM** both
+present as `kali` with a `kali` user; `hostname` cannot tell them apart. Discriminators named by the
+host session: **`systemd-detect-virt`** (host `none`) and **`uptime -s`**. ⛔ **A measurement on the
+VM settles nothing about the host, and the two are routinely called *"the laptop"*.** ⚠ **Reported
+as having produced FOUR errors in this estate, two of them the host session's own.**
+⭐ **AND THE REMEDY IS NOT *"ASK WHICH MACHINE"*, BECAUSE THE SESSION THAT HAD THE ANSWER SAILED PAST
+IT.** The peer's own account of its own reasoning: *"I even had the mechanism — I knew this VM's
+home directory reverted to 2026-05-05, which fully explains a guest-side absence and therefore implies
+nothing about a file created 2026-08-06 elsewhere. **HAVING THE MECHANISM DID NOT STOP ME DRAWING
+THE WIDER CONCLUSION.**"* **The failure was not missing knowledge; the mechanism sat in the same
+session, unconsulted at the moment of inference.** ⇒ The remedy that engages is
+§*A verification claim must name the artefact it was checked against*'s **negative-scope clause**:
+state what the result CANNOT settle at the point of measurement, not at the point of conclusion.
+
+**AXIS 1(b) — A RECORDED ABSOLUTE PATH IS A COORDINATE THAT SILENTLY OMITS ITS MACHINE.** ⛔ **On an
+estate with two machines sharing a name, an absolute path is not an address.** A bundle handoff
+document records a backup location as a bare absolute path with no machine named, and the artefact is
+NOT at the recorded path. **Two independent sessions measured the recorded
+path, correctly found nothing, and concluded the data was destroyed** — one of them reaching the
+right answer by unsound reasoning. ⚠ **Neither party was careless; the document was wrong.**
+⛔ **THE LOCATION OF THAT ARTEFACT IS NOT RECORDED IN ANY TIER, BY OPERATOR DECISION — no path, no
+directory, no machine.** That is why this clause names the **defect and the class** and no
+coordinates, and why the repair of the document is **still open** rather than applied: the narrowest
+repair anyone has proposed would name a machine, which is a widening nobody has authorised. **Do not
+"helpfully" reconstruct it.**
+
+**AXIS 2 — TWO MEMORY CORPORA BEHIND ONE CONVENTION.** ⭐ **The device-local instance, and the only
+one in this family with a first-hand arm.** The sibling handset's chroot backup on the external SD
+(`A526B-kalifs-backup.tar.gz`, **11,453,329,480 B, 2026-09-03**, curator-measured on this device)
+contains a memory store at **the same path shape** as ours — `.claude/projects/-root/memory/` — with
+the same frontmatter, the same kebab-case slugs and the same `**DECLARED ACCUMULATOR.**` markers,
+and it is **~93 % disjoint** from ours (**relayed, not re-derived here**). **Nothing in the reading
+experience marks which device a memory came from.** A slug read there was cited to the curator as
+belonging to this store; a name-based `/usr/bin/find` over `/root /tmp /sdcard` returned **rc 0,
+empty**, and the pointer would have dangled. ⛔ **The party making the claim was not outside our
+corpus — they had read both, and neither told them which was which.**
+⚠ **The probe half of this — *the store you searched is not the store that loads* — is
+T2 [[search-space-is-the-claim]] instance 6, whose PRIMARY case needs no foreign archive at all.**
+
+⛔ **AND THE TAG HAS *TWO SLOTS*, NOT ONE — WHAT IT WAS MEASURED **ON**, AND WHAT IT WAS MEASURED
+**WITH** — AND THEY CAN SIT ON DIFFERENT MACHINES. Added 2026-09-05.** This section's existing arms
+say *name the artefact the EVIDENCE came from*; that is silent on the commonest cross-machine case,
+a **local instrument reading a peer artefact**. ⛔ **A single-slot tag is then wrong whichever slot
+you fill:** tag only the SUBJECT and a finding about your own tooling reads as peer-only, so nobody
+applies it locally; tag only the INSTRUMENT and you conceal that the subject was another device's
+material. **Name both.** ⭐ **Worked instance, and it is a defect in this corpus's own filing:**
+`PRECONDITIONS.md` **P-136** was filed with **no** device named. Its SUBJECT was the sibling
+handset's chroot backup; its BEHAVIOUR MEASURED — `tar --wildcards` exiting 2 on a no-match, the
+harness background wrapper reporting **0** over it, and `2>/dev/null` destroying the only remaining
+discriminator — is **this device's `tar` and this session's harness, and depends on nothing about
+what was being extracted.** So the row **generalises to any `tar` run here** and only its instance is
+peer-sourced; narrowing it to peer-subject status would have been the opposite error.
+⚠ **HOW IT HAPPENED, because it is the same shape one level up: the brief handed to the curator
+stated the measurement and omitted its subject entirely, so the coordinate could not be tagged
+because it was never supplied.** ⛔ **That is not a full exculpation and must not be recorded as
+one** — asking for missing coordinates is the curator's half, and it was not done. **Both causes are
+real; only the sender's is fixable by the sender** (§*One tier owns a number*, *a count handed to the
+curator is an unverified claim*, which generalises from counts to coordinates).
+⚠ **PROVENANCE: AXIS 1 and its quotation are RELAYED from the laptop host session via the
+coordinating session, about their own reasoning, and are NOT re-derivable from this box. AXIS 1(b)'s
+class is relayed; that the recording document is defective is curator-confirmed on this device by
+line inspection. AXIS 2's archive size, path and the absence of any extracted copy are
+CURATOR-MEASURED here; the 41-file store, its index and the ~93 % disjointness are RELAYED. P-136's
+subject was settled by the session that ran the extraction; the behaviour half is this device's.**
+
 ### An AUTHORIZATION is not a claim, and a RELAYED one is CLAIMED — added 2026-08-19
 
 The three labels above all describe how well a claim about **the world** was checked, and each names
@@ -778,6 +952,35 @@ both counts: it is unenforceable, and it would delete true sentences. The worked
   became false when the build moved.
 
 **So blanketness was never the defect. The missing baseline was.**
+
+⛔ **AND NAME WHAT THE MEASUREMENT CANNOT SETTLE, IN THE SAME BREATH AS WHAT IT DID — added
+2026-09-05. EVERY COORDINATE BELOW NAMES WHAT THE MEASUREMENT *WAS*; NONE BOUNDS WHAT IT IS TAKEN TO
+SHOW.** ⭐ **THE MECHANISM, AND IT IS WHY *"BE CAREFUL"* DOES NOT REACH IT: THE RIGOUR ON THE
+VERIFIED PART IS WHAT LICENSES THE OVERSTATEMENT ABOUT THE WHOLE.** This is **not** an unverified
+claim wearing verified clothes — it is a genuinely verified claim whose scope quietly expanded past
+what was measured, **and the verification is precisely what makes the wider statement feel earned.
+Nobody audits the scope of a measurement they have just watched succeed.**
+**The peer's own account of its own work:** *"I verified hop 1 rigorously, hashing at the destination
+after the copy, and then described the whole handover in terms of the hop I had verified. **A CORRECT
+MEASUREMENT, STATED WITH A SCOPE WIDER THAN IT EARNED.**"* It headed its record *"handover completed,
+waiting to be collected"*; hop 2 had not happened, and the heading became *"HOP 1 DONE, HOP 2
+PENDING"* only after the other end measured the absence.
+⭐ **THE FORM: state the negative at the POINT OF MEASUREMENT, not at the point of conclusion** —
+*"this settles X on machine M at revision R; it settles nothing about Y"*. A scope limit recalled
+later is a scope limit that was available and not consulted (§*A PEER-SOURCED MEASUREMENT*, AXIS 1:
+**having the mechanism did not stop the wider conclusion**).
+⚠ **A UNIFICATION WAS OFFERED AND IS DELIBERATELY NOT ADOPTED AS A TAXONOMY** — that *measure X,
+report about X+n* is one shape spanning a recorded path, a manifest, a secrets gate and a search
+denominator. ⛔ **Recorded as an ARGUMENT, not a measurement: it has had no adversarial pass, its
+author filed three of the four instances it tidies, and its instances straddle two DECLARED
+accumulators — T2 [[true-verdict-wrong-set]] (a green about the wrong population) and
+[[search-space-is-the-claim]] (a negative about the wrong space) — each of which states in writing
+why it is not the other.** Adopting it as either file's shape would merge two declared accumulators
+by re-declaration, which §*T2 size* forbids. **The REMEDY above is filed at full strength regardless,
+because it does not depend on the taxonomy being right.**
+⚠ **PROVENANCE: the quotation and the handover instance are RELAYED, the peer's words about its own
+reasoning, not re-derivable here. The unification is the coordinating session's, offered as an
+argument and labelled as one.**
 
 ⛔ **AND SOME EVIDENCE CANNOT BE NAMED BECAUSE IT CANNOT BE RE-OPENED — added 2026-09-01. This section
 assumed the evidence is re-openable and never said what to do when it is not.** **Tool stdout, a run's
@@ -1621,6 +1824,24 @@ number until the move lands. Patching one tier while copying the other is exactl
   must not be cut.** **Write the full output to a retained file and read sections FROM the file**;
   never `| head`, `| sed -n`, `| tail` downstream of a destructive step. ⚠ **Scope it by
   IRREVERSIBILITY, not by tool** — a delete-on-read capture, a consumed pipe, a one-shot ring read.
+- ⛔ **AND ITS ERROR-CHANNEL TWIN, WHICH IS THE ONE PEOPLE ACTUALLY WRITE: SUPPRESS STDERR ONLY ON A
+  PROBE WHOSE **FAILURE** AND WHOSE **NEGATIVE RESULT** ARE DISTINGUISHABLE IN THE OUTPUT YOU KEEP.
+  Added 2026-09-05.** The bullet above cuts the output; this cuts the reason, and both destroy the
+  discriminator. ⛔ **FOR A COUNTING PROBE THEY ARE NEVER DISTINGUISHABLE — *the probe crashed* and
+  *there is nothing there* both render as `0`** — and a `${x:-0}` default finishes the job by
+  manufacturing the zero the crash withheld. ⭐ **It is deliberately narrower than *"do not suppress
+  stderr"*, which nobody follows**; stated as a condition, it is checkable per command.
+  ⚠ **Live instance, on-device 2026-09-05, and the direction is the bad one:** a verification pass
+  wrote `FILES=$(find ...)` and then `grep ... $FILES` — under **zsh** the unquoted parameter does
+  not word-split (`PRECONDITIONS.md` **N-10**), so `grep` received one giant non-existent filename;
+  `2>/dev/null` removed the reason and a `${n:-0}` default rendered it as a confident **0**, pointing
+  at **retracting a TRUE finding**, i.e. toward destroying real evidence. ⛔ **The inline
+  `$(find ...)` form DOES split in both shells, which is why the ENUMERATION was right and the
+  VERIFICATION OF IT was wrong** — the same session had described that exact trap to a peer minutes
+  earlier. **Caught only by an expectation mismatch**, never by the probe. ⚠ **Two more instances of
+  the same suppression are already filed and neither states the general condition:**
+  `PRECONDITIONS.md` **P-136** (*never pass `2>/dev/null` to `tar`*) and **P-104** (a gate behind a
+  pipe). **This clause is what those two are instances of.**
 - ⛔ **NEVER `git checkout` TO UNDO A SCRATCH EDIT — copy the file aside instead.** Added
   2026-08-11 after a `git checkout` intended to discard a temporary change **reverted uncommitted
   work in the same file**. `git checkout -- <path>` restores the whole path from the index; it has
