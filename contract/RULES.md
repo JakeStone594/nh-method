@@ -1,5 +1,12 @@
 # Memory curation rules — the tiering contract
 
+> ⛔ **THIS FILE IS DELIBERATELY NOT BYTE-IDENTICAL TO ITS PRIVATE ORIGINAL.** One tool name is
+> sanitised: the private copy names a cellular-capture tool that is private-repo-only by operator
+> decision (2026-08-19, extended to this file 2026-09-10). **A `cmp` against the device copy will
+> therefore always report drift for this file, and that drift MUST NOT be resolved by copying the
+> private version over it** — doing so republishes the name the sanitisation exists to withhold.
+> Re-sanitise instead, then re-run `scripts/scan-secrets.sh --public`, which fails on that name.
+
 Authoritative for the `memory-curator` agent and for anyone writing knowledge on this box.
 Read this before deciding where a fact goes.
 
@@ -1784,7 +1791,7 @@ number until the move lands. Patching one tier while copying the other is exactl
   ⚠ **ONE SIDE EFFECT IS ESTABLISHED AND THE REST ARE NOT — DO NOT LEVEL THEM.**
   `catch-boot-warn` writes a dmesg capture to `/root/boot-logs/` on a bare run: **verified by
   source** (unconditional write, and the tool's own comment says an accidental invocation still
-  writes) **and observed on-device 2026-09-02**. ⛔ **What `diagcap`, `usbgadget` or `rogueap` do on
+  writes) **and observed on-device 2026-09-02**. ⛔ **What `usbgadget` or `rogueap` do on
   a bare invocation is UNTESTED, is not asserted here, and must not be resolved by running one.**
   ⭐ **THE REMEDY IS NOT "ALWAYS QUOTE", BECAUSE THE UNQUOTED FORM IS REACHED FOR ON PURPOSE.** You
   choose it when you want ONE legitimate expansion, and that single convenience arms every backtick

@@ -167,8 +167,8 @@ the same work in **0.17 s** (curator-measured 2026-08-19). Two rules fall out, a
 durable one: **a per-file fork inside a `/proc` glob is a hang, not a slow loop** — push the
 predicate into `find`; and **order the tool so every resolution, validation and probe finishes
 before the first state change**, leaving the armed window as short as the work truly requires.
-`diagcap` is the strongest form of the same idea — its restore is the **kernel's**, fired when the
-fd closes, so it survives `kill -9` outright.
+The strongest form of the same idea is a restore that is the **kernel's**, fired when the
+descriptor closes, so it survives `kill -9` outright.
 
 **A DESTRUCTIVE TOOL'S DEFAULT MUST BE INERT, AND THE INERTNESS MUST BE TESTED WITH SOMETHING
 ELIGIBLE PRESENT.** Relayed from the laptop peer 2026-08-23, from a retention script whose dry-run
@@ -191,8 +191,8 @@ note is worse than no note** — the next reader guards the wrong pattern.
 **Undo what you did, not what is there — and let the filesystem enforce it.** To remove a
 directory your run created, `rmdir` it, not `rm -r`: `rmdir` **refuses** if anything else
 appeared inside, which is exactly the difference between removing what you made and
-removing whatever is there. The estate already reasons this way one level up — `diagcap
---delete-on-exit` removes only a run dir the run itself created, and every journalled
+removing whatever is there. The estate already reasons this way one level up — a
+`--delete-on-exit` flag removes only a run dir the run itself created, and every journalled
 teardown here replays its own records rather than flushing state wholesale. ⚠ **A failure
 from `rmdir` is information, not an obstacle: something you did not put there is in a
 directory you were about to delete.**

@@ -252,6 +252,15 @@ if [ "$PUBLIC" -eq 1 ]; then
         'SM-[A-Z][0-9]{3}[A-Z]?|\bA52\b|galaxy[[:space:]]+a[0-9]{2}|\batoll\b|\bdm1q[a-z]*\b|sm7125|SDM720G|snapdragon[[:space:]_-]*720|ro\.(serialno|product\.(vendor\.)?(model|name|device))' \
         '' '-i'
 
+    # A cellular-capture tool is private-repo-only by operator decision (2026-08-19, extended
+    # to contract/* on 2026-09-10). This probe is what makes that ruling survive a repo
+    # rebuild: the 2026-09-01 delete-and-recreate silently reverted the sanitisation and
+    # nothing objected, because no probe named the tool. Self-matching, hence the PATHSKIP.
+    PATHSKIP='^scripts/scan-secrets\.sh$' \
+    check "no private-only tool name" \
+        '\bdiagcap(-summary|-watch)?\b' \
+        '' '-i'
+
     # ── Sanitised-file integrity ──────────────────────────────────────
     # contract/REGRESSION.md is deliberately NOT byte-identical to its private original:
     # one question is rewritten without this handset's literals. The probe above cannot

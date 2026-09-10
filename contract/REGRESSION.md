@@ -546,8 +546,7 @@ supposed to grow.
     because the answer is **no** and the register read exactly like coverage: 10,395 lines of
     `docs/tests/*-CAMPAIGN.md`, every one *written, NOT STARTED*, deleted unexecuted 2026-08-12. A
     correct answer knows **a plan is not evidence**, names the tools ever executed against — **nine as of
-    2026-08-20**: `usbgadget` `rogueap` `hidrun` `wificonnect` `hcxcapture`, plus the cellular set
-    `diagcap` `diagcap-summary` `diagcap-watch` `vpnleak`; **`TOOL-BACKLOG.md` G-14 owns the set,
+    2026-08-20**: `usbgadget` `rogueap` `hidrun` `wificonnect` `hcxcapture`, plus the four-tool cellular set; **`TOOL-BACKLOG.md` G-14 owns the set,
     do not quote it from here**, and knows `TOOL-TEST-METHOD.md`'s
     instance register is dead while its **method** — harness-can-lie, INCONCLUSIVE-never-FAIL, the
     snapshot rule — is not.
@@ -1114,8 +1113,8 @@ supposed to grow.
     of its four trim cases silently undetectable** — a clause checked against the trimmed list
     itself passes vacuously. **Do not re-generalise it**; the reasoning that produced the weakening
     (§*One tier owns a number* read as forbidding a checklist from restating T0 content) is in
-    `CORRECTIONS.md` 2026-08-19 *"a REGRESSION pass criterion was weakened"*. (b) the **`diagcap` basis** — own baseband, own subscription, third-party
-    paging as *unavoidable incidental capture on a common broadcast channel, never targeting*;
+    `CORRECTIONS.md` 2026-08-19 *"a REGRESSION pass criterion was weakened"*. (b) the **incidental-capture basis** — the operator's own hardware, own subscription, and
+    third-party data a shared broadcast medium makes *unavoidable incidental capture, never targeting*;
     (c) ⛔ the **DELETE-ON-READ retention rule** (operator decision 2026-08-19) **and the enforcement
     basis that makes it load-bearing**: nothing **IN THE CHROOT** prunes on its own, so retention is
     enforced by whoever runs the capture, **at the end of that run**, or not at all — **plus the
@@ -1143,7 +1142,7 @@ supposed to grow.
     the rule for any other host**. ⚠ **(d) without its second half is the dangerous partial**: it
     reads as a precedent for keeping WPE loot generally.
     ⚠ **A trim that keeps the estate list and drops the two bases FAILS.** They are the half that
-    cannot be re-derived — the corpus can tell you what `diagcap` captures and how to handle it, and
+    cannot be re-derived — the corpus can tell you what such a tool captures and how to handle it, and
     could never tell you why producing it is permitted. ⚠ **This question is about §*Scope*, not
     §*Secrets*, and merging them fails it**: handling rules and permission are different claims, and
     §*Secrets* was complete and detailed for months while the permission question went unwritten.
