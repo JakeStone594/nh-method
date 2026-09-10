@@ -1000,9 +1000,20 @@ supposed to grow.
     answer is **no to both**, and each half fails in the direction that publishes device identity.
     ⛔ **There are TWO repos and their invariants are OPPOSITE.** The private one is a
     **byte-identical mirror** of the device (BT-0.10); the public one is a **curated derivative**,
-    and exactly one file is deliberately short — the contract's regression checklist, with its one
-    identity-carrying question removed, leaving a visible gap in the numbering. **A `cmp` sweep
-    reports that as DRIFT and the reflex fix copies the identity straight into a public tree.**
+    and **more than one file is deliberately short — do not quote a count here; T2
+    `nh-method-repo` owns the set**, this checklist among them, with an identity-carrying question
+    removed that leaves a visible gap in the numbering. **A `cmp` sweep reports that as DRIFT and
+    the reflex fix copies the identity straight into a public tree.**
+    ⛔ **RETIRED 2026-09-10 — kept as a record of its day, NOT as a rule:** *"exactly one file is
+    deliberately short — the contract's regression checklist, with its one identity-carrying
+    question removed"*. **Falsified by the 2026-09-10 sanitisation**, which made
+    `contract/RULES.md` a second permanently-divergent file and added a second sanitisation to this
+    one. ⚠ **The failure shape is why it is retired rather than corrected in place: a reader who
+    trusts *"exactly one"* looks in the wrong file AND stops looking**, which is the same
+    stop-checking direction §*Method* warns about. ⚠ **APPLIED BY THE SESSION WHOSE OWN ACTION
+    FALSIFIED THE CLAIM, and the curator that wrote the retraction declined this edit as
+    scorer-repairs-own-instrument. So this fix has had NO INDEPENDENT SCORER** — the next pass
+    should check it rather than inherit it (T2 [[self-made-fix-needs-another-scorer]]).
     ⚠ **An answer that reaches for the four-root `cmp` loop is the state this question exists to
     catch** — that loop is scoped to the private mirror and is the wrong instrument here; the
     numbering gap is the tell, not a defect to close.
