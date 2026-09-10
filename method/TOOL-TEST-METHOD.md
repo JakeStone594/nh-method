@@ -228,11 +228,29 @@ These are cheap to restate and expensive to rediscover. Cite the clause; do not 
 - **Never `iptables -F` or `iptables-restore`** wholesale (BT-4.20, P-14).
 - **Record pre-existing residue before Stage 0**, and decide deliberately whether to sweep it or
   expect it in every diff. **Sweeping is itself a write** — do it before, never mid-campaign.
+- ⛔ **AN ARM SET IN WHICH NO ARM COULD HAVE FAILED IS NOT A TEST, HOWEVER MANY ARMS IT HAS.**
+  Some conditions are **unrunnable as designed** rather than merely hard — a platform that permits
+  only one instance of a thing at a time cannot host an arm needing two. ⚠ **Such a condition must
+  be SYNTHESISED and the arm must SAY it was**; an arm that reads as two live instances is
+  describing a state the platform cannot reach. ⛔ **THE ANTI-EXAMPLE, and it is the sharper half:
+  a decoy chosen BY THE AUTHOR OF THE FIX UNDER TEST**, where the fix's whole content was *"the
+  peer answers"* and the decoy was a peer that **cannot** answer. It fails **BY CONSTRUCTION**, so
+  four arms passed and **none of them could have failed** — falsified hours later by one reachable
+  peer that did answer. ⭐ **THE OPERABLE LINE, one sentence per arm set: NAME THE ARM THAT WOULD
+  HAVE FAILED, AND SHOW IT WAS REACHABLE.** ⭐ **And ask whether the arm really needs the synthetic
+  condition at all** — synthesise only what the platform genuinely cannot reach, and say so in the
+  arm.
+- ⛔ **SOME STATE ON A TARGET IS A STANDING PRECONDITION, NOT RESIDUE — CHECK BEFORE YOU SWEEP.** A
+  lab target may carry an account, a share or a config left in place **by decision**, so that a
+  specific results row stays reproducible. ⛔ **Delete it and that row silently reverts to an
+  earlier result, which reads as a tool regression and is not one.** ⭐ **The general rule: a
+  deliberate non-restoration has to be findable from the TEARDOWN side, not only from the results
+  row that created it** — a cleanup pass never opens a results row.
 
 ---
 
 
-### 3.6 A two-machine test — the ACTING side must start the OBSERVING side
+### 3.6 A two-machine test — the ACTING side must start the OBSERVING side. Added 2026-08-27
 
 ⛔ **AN OBSERVATION WINDOW ON ONE MACHINE CANNOT BE HAND-SYNCHRONISED WITH AN ACTION WINDOW ON
 ANOTHER, AND THE FIX IS STRUCTURAL RATHER THAN MORE CARE.** Measured across a two-machine campaign —
@@ -256,7 +274,7 @@ driving two machines. ⭐ **Write down, in the test block, WHICH of the two desi
 
 ---
 
-### 3.7 Driving an INTERACTIVE tool against stubbed state
+### 3.7 Driving an INTERACTIVE tool against stubbed state. Added 2026-08-31
 
 A menu's screens cannot be exercised by `--dry-run`, and standing up the state they display costs
 real infrastructure and a teardown. **Source the tool as a library, stub its state readers, and
@@ -522,7 +540,7 @@ snapshot**: record which resource the tool selected, not only what it reported.
 ---
 
 
-### The fifth shape — the harness identified its SUBJECT BY NAME PATTERN, and matched a decoy the system under test raises exactly when the interesting state occurs
+### The fifth shape — the harness identified its SUBJECT BY NAME PATTERN, and matched a decoy the system under test raises exactly when the interesting state occurs. Added 2026-08-27
 
 The four above are a harness that measures itself, one that cannot pass, one that changed the
 environment, and one that let the *tool* choose the subject. **In this one the harness chose the
