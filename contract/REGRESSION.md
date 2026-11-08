@@ -1363,3 +1363,31 @@ supposed to grow.
      two errors this question exists to prevent.
      `USB-HID.md` owns the per-host detail and the stimulus-source limit; `TOOL-TEST-RESULTS.md`
      `HR-14`/`HR-15` own the measurements; `CORRECTIONS.md` 2026-08-30 owns both retired wordings.
+
+> ⚠ **Questions 102–108 of the private original are not yet ported to this copy** (as of
+> 2026-11-08). The numbering below resumes at 109 so a ported question keeps the number it has in
+> the original; the gap is lag, named here so it is not read as an omission.
+
+### Added 2026-11-08 (the package layer — a dependency installer that runs unattended)
+
+109. **A tool installs a dependency it is missing, by itself, with its output discarded. The install
+     line never returns. What is happening, what does the line have to carry, and what does the tool
+     do once the install has "succeeded"?** — added 2026-11-08 when a general Kali-platform skill was
+     ported onto this box and three dependency installers in the estate were found, two of them
+     without the one word that prevents this. ⭐ **A correct answer has four parts.** **(a) The hang
+     is debconf**: the package's postinst asked a question, nothing can answer it in a
+     non-interactive shell, so `apt-get` waits forever with no output and the package is left at
+     `iF`; behind `>/dev/null 2>&1` this is indistinguishable from a slow mirror, and *"the network
+     is hung"* is the FAIL. **(b) The line carries `DEBIAN_FRONTEND=noninteractive` and `-y`**, and
+     recovery is killing the frontend **by PID** and `DEBIAN_FRONTEND=noninteractive dpkg
+     --configure -a`. **(c) The failure names the binary AND the package**, because the two differ
+     and the operator should not have to guess. **(d) The tool verifies by FUNCTION afterwards** —
+     `command -v` again is the floor, running the binary is the standard, and an exit code is
+     neither — then degrades the phase the dependency served rather than aborting the tool.
+     ⛔ **An answer that treats `apt-get`'s exit status as the verdict FAILS on the same shape as
+     `systemctl`'s exit 0.** ⚠ **Sibling trap, same section:** `apt-cache policy` showing the
+     installed version as `Candidate:` is NOT evidence a remote copy exists — the dpkg status file is
+     a version source — so *"safe to `apt-get clean`"* needs the print-uris fetchability audit with
+     its coverage identity, never the policy readout. `CODING-RULES.md` rule 9 and its three
+     pre-commit greps own the rule; the public `nh-method` `method/LYING-PROBES.md` §2 owns the
+     portable instances; `SERVICES.md` owns the fetchability audit and the postinst root cause.

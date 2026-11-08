@@ -114,3 +114,35 @@ modes; those are N-73 / N-74 / P-65, not this one.
 
 ---
 
+## 2. The package layer — instances that transfer
+
+Added 2026-11-08. §1 is the mechanism list and it is unchanged: nothing here adds a ninth cause.
+These rows are instances, included because — unlike the radio and gadget rows left in the parent —
+each reproduces on an ordinary Debian-derived box, so a reader can check the mechanism against
+their own machine rather than take it on report. They surfaced while porting a general Kali
+platform skill onto the parent device, where every figure in its ground-truth table turned out
+to need re-measuring; the port is itself the last row. **`established` says how each row was
+settled**: *measured* means a probe was run on the parent box on the date given; a row with no
+date was measured but the date was not re-derived for this table.
+
+| probe as typed | wrong conclusion | G | honest probe | established |
+|---|---|---|---|---|
+| `apt-cache policy <pkg>` shows `Candidate:` equal to the installed version | *a remote copy exists, so the cache is safe to clean* | **G5** — the dpkg status file is itself a version source (priority 100), so the installed version is a candidate for itself; the only *remote* on offer may be a downgrade | ask fetchability: `apt-get install --reinstall --print-uris -y <every ii package>`; no URI means the cached or installed copy is all there is. Check the run's own coverage — URIs plus `is not possible` lines must equal the package count — and pass **`ii` only**: one `rc` package aborts the solver with zero URIs, which reads as a clean audit | measured 2026-10-02 |
+| `apt-get autoclean` — *"removes only superseded .debs"* | *harmless housekeeping* | **G8** — it asks *is this version still in the index*, not *is it fetchable*; the superseded copies are exactly the irreplaceable ones | the print-uris audit above, before any clean; move the irreplaceable `.deb`s aside first | measured 2026-10-02 |
+| `dpkg --audit` prints nothing; the package is `ii` | *its setup ran* | **G4** — with the postinst file absent, dpkg's configure step trivially succeeds | `test -e /var/lib/dpkg/info/<pkg>.postinst`, then the functional effect the postinst owed — the user, group or directory it should have created | measured; the parent's services doc owns the count |
+| `apt-get install --reinstall <pkg>` prints nothing and never returns | *the network is hung* | **G6 / G5** — the postinst asked debconf a question, nothing can answer it in a non-interactive shell, and the package is left at `iF` | prefix every package operation `DEBIAN_FRONTEND=noninteractive`; recover by killing the frontend **by PID** and `DEBIAN_FRONTEND=noninteractive dpkg --configure -a` | measured 2026-08-15 |
+| `command -v X` → rc 0 | *X runs* | **G3** — a path is a name; a shim can front a dead venv and a wrapper can exit 0 without reaching its interpreter | run it and read the output (`X --version`), never the rc alone | measured 2026-08-14 — a majority of one box's venvs answered with a path and did not run (NEW-3) |
+| `systemctl start X` → rc 0 | *X is running* | **G5** — in a chroot the real binary self-detects, prints `Running in chroot, ignoring command`, and exits 0; anything layered on it (`pg_ctlcluster`) inherits the lie | `pgrep -x <daemon>` plus a functional probe; `service X status` where the init scripts are guarded | measured |
+| `invoke-rc.d X status` → rc 4 | *X is down* | **G8** — `policy-rc.d` refused a read-only action (`emulating initscript action "status", returning "unknown"`); the daemon was never consulted | `service X status` or `pgrep -x` for the read; keep `invoke-rc.d` for the writes the policy allows | measured |
+| `pip3 install` fails with `externally-managed-environment` although the distro's `dpkg-divert` of `EXTERNALLY-MANAGED` is registered; `rm /usr/lib/python3.N/EXTERNALLY-MANAGED` changes nothing | *the divert theory is wrong* | **G4 / G2** — a new file was written on top of the diverted path, and the typed `N` names an interpreter that is no longer `python3` | resolve the version from the interpreter you run: `rm /usr/lib/python$(python3 -c 'import sys;print("%d.%d"%sys.version_info[:2])')/EXTERNALLY-MANAGED` | measured 2026-08-15 |
+| `command -v go` → rc 1 | *no Go compiler on this box* | **G4** — a toolchain can live inside the module cache (`~/go/pkg/mod/golang.org/toolchain@*/bin/go`); and `go clean -modcache` deletes it, so the usual *it re-downloads on the next install* recovery is circular | look in the module cache before concluding; never clean it on a box with no package-installed `go` | measured |
+| `df /` inside a chroot | *the chroot's size* | **G1** — it describes the host's partition, shared with everything else on it | `du -xk /`, unpiped and with stderr kept — `du \| sort` returns **sort**'s status, so a truncated walk reads as a complete one (P-113) | measured 2026-10-02 |
+| `bash -n <script>` fails | *nothing ran* | **G5** — bash executes command by command as it parses; everything above the error already ran | read a suspect script; do not run it to see the error (P-46) | measured 2026-08-11 |
+| in an assistant tool call: `find … -newermt '-3 minutes'` → empty; `grep -E 'a\|\|b'` → empty | *no recent files; no match* | **G7** — the harness shadows `find` with `bfs` (rejects GNU's relative stamp) and `grep` with `ugrep` (errors on an empty alternation branch); both exit ≥ 2. ⚠ Scope precisely: the harness, not the box — a `#!/bin/bash` script and the terminal get GNU | `/usr/bin/find … -mmin -N`, `/usr/bin/grep`; treat any rc ≥ 2 as *did not run*, never as *no match* (N-62, N-72, P-66, P-81, P-93) | measured 2026-08-23 |
+| a figure carried from another machine — a package count, a wordlist path, an interpreter version, a release string | *true here too* | **G5** — a stored value is the author's write, not the world's read, and a rolling release moves it under you | re-measure on arrival; name the file that owns a count rather than copying the count | the platform skill's own ground-truth table: measured on the parent 2026-08-21, every row differed from the laptop original |
+
+⚠ **Several of these fail in the dangerous direction.** The first two and the `bash -n` row each
+license a *delete*; a wrong *present* costs time, a wrong *absent* or *safe* costs the only copy.
+Run the positive control before acting on an empty or green result, not as general hygiene afterwards.
+
+---

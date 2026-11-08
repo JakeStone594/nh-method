@@ -295,6 +295,32 @@ command substitution refuses nothing: the message prints, the assignment yields 
 caller continues. Either guard the call site (`x=$(helper) || exit 1`) or call the helper directly
 where its exit is meant to be the program's.
 
+## 9. A dependency installer is a write path that runs unattended
+
+Proposed 2026-11-08; a rule binds only after the operator has seen it (see the head of this file).
+
+A tool that installs what it is missing is doing package management from inside a script,
+usually with nobody at the terminal and its output discarded. Four things follow:
+
+- **Name the binary *and* the package.** `hcxpcapngtool` is in `hcxtools`; `pymetasploit3` is
+  `python3-pymetasploit3`. A failure that names only the binary sends the operator to guess.
+- **Every `apt-get` or `apt` call in a tool carries `DEBIAN_FRONTEND=noninteractive` and `-y`.**
+  A postinst that asks debconf a question hangs forever with no output and leaves the package at
+  `iF`. Behind `>/dev/null 2>&1` that hang is indistinguishable from a slow mirror. Of the three
+  dependency installers in the estate today, one sets the frontend.
+- **Verify by function after installing**, the same as before: `command -v` again is the
+  minimum, running the binary is the standard. The existing installers already re-check; keep it.
+- **Degrade the phase, do not abort the tool**, where the dependency serves one phase. The
+  install prompt is a choice the operator makes; the tool states what the phase will lack without it.
+
+Two related rules the same class of line keeps breaking:
+
+- **Never `>/dev/null 2>&1` together with an unchecked status.** That pair converts a crash into
+  a silent no-op. Silence the output only on a line whose status the next line reads.
+- **A typed interpreter or release version is a date in disguise.** `python3.13` was the
+  interpreter for a season and then it was not. Resolve it at runtime (`python3 -c 'import
+  sys;print("%d.%d"%sys.version_info[:2])'`), or run `python3` and let the path decide.
+
 ## What "safe" costs, for reference
 
 `hcxcapture` restores the radio on every exit path, drops and restores Android's Wi-Fi,
@@ -321,6 +347,12 @@ reads as two findings.
 
 ⚠ **The `\b[12]\.[0-9x]\b` arm of the first grep hits `2.4 GHz`.** A band is not a version;
 read the matched line, never the count.
+
+Three more, for the package layer (rule 9):
+
+    grep -nE 'apt(-get)? +(install|update|upgrade)' <file>   # each line carries DEBIAN_FRONTEND=noninteractive and -y
+    grep -nE '>/dev/null 2>&1|&>/dev/null' <file>             # each is followed by a line that reads the status
+    grep -nE 'python[23]\.[0-9]+|/usr/lib/python3\.[0-9]' <file>   # a typed version; resolve it instead
 
 
 ---
@@ -387,3 +419,9 @@ misread as failure if they apply the house rule.
   escape — it charged ceremony per mutated piece of state and forbade deletion, so every review
   pass could only add, and every review pass grew the tools it governed. Measurements:
   `docs/CORRECTIONS.md` 2026-08-13.
+- **A command held for later is an array, not a string.** The interactive shell here is `zsh`,
+  which does not word-split an unquoted scalar, so `CMD="nmap -sS"; $CMD host` is one command
+  name and fails with `command not found` — and behind a discarded stderr the whole run
+  silently does nothing. `CMD=(nmap -sS); "${CMD[@]}" host` is correct under both shells.
+  Shipped scripts carry `#!/bin/bash` and are unaffected; one-liners and anything sourced
+  into the interactive shell are not.
