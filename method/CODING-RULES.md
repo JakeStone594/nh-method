@@ -297,7 +297,7 @@ where its exit is meant to be the program's.
 
 ## 9. A dependency installer is a write path that runs unattended
 
-Proposed 2026-11-08; a rule binds only after the operator has seen it (see the head of this file).
+Added 2026-11-08; read and approved by the operator the same day, so it binds.
 
 A tool that installs what it is missing is doing package management from inside a script,
 usually with nobody at the terminal and its output discarded. Four things follow:

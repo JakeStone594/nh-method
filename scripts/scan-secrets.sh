@@ -270,6 +270,9 @@ if [ "$PUBLIC" -eq 1 ]; then
     must_contain "sanitised question intact" \
         'contract/REGRESSION.md' \
         'never resolves the conflict by trusting the model string'
+    must_contain "sanitised ROM question intact" \
+        'contract/REGRESSION.md' \
+        'no such thing as *"the"* fingerprint'
 fi
 
 # ── Cellular identity ─────────────────────────────────────────────────────────────────

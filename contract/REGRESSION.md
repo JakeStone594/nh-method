@@ -1,8 +1,9 @@
 # Regression checklist — questions the docs must still answer
 
-> ⛔ **THIS FILE IS DELIBERATELY NOT BYTE-IDENTICAL TO ITS PRIVATE ORIGINAL.** One question is
-> sanitised: the private copy names this handset's spoofed model string, its codename and three
-> Android identity properties, none of which may appear in a public repository. **A `cmp` against
+> ⛔ **THIS FILE IS DELIBERATELY NOT BYTE-IDENTICAL TO ITS PRIVATE ORIGINAL.** Three questions
+> are sanitised: two name this handset's model, its ROM's donor platform, codenames and Android
+> identity properties, and one names a private-only tool and its doc. None of that may appear in
+> a public repository. **A `cmp` against
 > the device copy will therefore always report drift for this file, and that drift MUST NOT be
 > resolved by copying the private version over it** — doing so republishes the identity the
 > sanitisation exists to withhold. Re-sanitise instead, then re-run `scripts/scan-secrets.sh
@@ -1364,9 +1365,151 @@ supposed to grow.
      `USB-HID.md` owns the per-host detail and the stimulus-source limit; `TOOL-TEST-RESULTS.md`
      `HR-14`/`HR-15` own the measurements; `CORRECTIONS.md` 2026-08-30 owns both retired wordings.
 
-> ⚠ **Questions 102–108 of the private original are not yet ported to this copy** (as of
-> 2026-11-08). The numbering below resumes at 109 so a ported question keeps the number it has in
-> the original; the gap is lag, named here so it is not read as an omission.
+### Added 2026-09-02 (the rollback that lands on a broken kernel)
+
+104. **You need to roll the kernel back one generation. What do you land on?** — added because the
+     answer stopped being *"the previous manifest"* on 2026-09-02, and because the corpus had
+     taught the opposite for nine days: T0 said *"a rollback is a choice of manifest and never a
+     hand-picked zip"*, which invites taking the adjacent one.
+     ⛔ **REWRITTEN 2026-09-03 — OPERATOR-AUTHORISED, obtained in session and not relayed. Recorded
+     because §*Method*'s one exception forbids a SCORER repairing its own instrument: this pass
+     REPORTED the staleness twice and stopped, and the edit was taken only on the operator's
+     authority. The exception was honoured, not bypassed.** ⚠ **It had also been CORRUPTED by its own
+     2026-09-02 in-place edit** — a duplicated *"hand-picked zip…"* clause and an orphaned *"(a)
+     name"* — **repaired here.**
+     ⛔ **AND THE CRITERIA ARE NOW DERIVATIONS, NOT VALUES, BECAUSE THE VALUE FORM WENT STALE ON THE
+     VERY NEXT FLASH — TWICE.** It named `V10 (running)` within a day of v11, and again within two of
+     v12. **Do not re-introduce a literal chain here; `KERNEL-V2.md` owns it and T0 points at it.**
+     ⭐ This is today's `#1` lesson applied to the scorer: T0's clause survived because it was a
+     derivation, `KERNEL-V2.md`'s count did not.
+     **A correct answer must:** **(a)** name the **currently running** build and say that the chain is
+     owned by `KERNEL-V2.md` §*<the current generation's* flashed and verified*>* → *Rollback*, with
+     T0 pointing there — **not recite a chain from memory or from this question**; **(b)** give the
+     **one-step-back target by name, BOTH zips**, as whatever that section currently names, and know
+     it is a **choice of manifest, never a hand-picked zip**; **(c)** state ⛔ **NEVER LAND ON V8** —
+     its `process_diagid` guard rejects every legitimate DIAGID registration packet, so the baseband capture tool
+     returns **ZERO frames** on it. **This one is FIXED and may stay literal**; **(d)** name **V7 as
+     the harbour AND why** — it is the last build **BEFORE** the entire diag series (operator,
+     2026-09-02), a reason that **outlives** V8's defect — **and its cost** (all the diag commits,
+     and the original control-packet over-reads reinstated: real, never observed causing a fault
+     here); **(e)** say the cut is recorded as the **ARTEFACT — the staged zip — and never as a
+     hash**, which goes stale the next time a tip moves; and **(f)** ⛔ **state the ORDERING HAZARD,
+     new with v12 and the reason this question now binds BISECTS AND NOT ONLY FLASHES:**
+     `5681bf871` **ARMS** the msg-mask use-after-free and `595a6496b` **DISARMS** it, **with the fix
+     LATER in the DAG — so any cut or bisect landing BETWEEN them has it ARMED.** The two must
+     travel together.
+     ⛔ **AN ANSWER THAT ASSERTS ANY *"one step back is broken / is safe"* AS A STANDING FACT FAILS,
+     whichever way it points** — it was true from v9, false from v10, and it is the exact shape of a
+     guard whose reason rotted while its verdict stayed plausible. **The safety of a link is a
+     property of the link, and it must be read, not inferred from adjacency.** ⚠ **"v8 is broken" must not be read as "v8 is dangerous":** it is stable
+     and not unsafe, it simply returns nothing — the absent-versus-broken shape that makes it
+     survivable to land on and hard to notice.
+     ⭐ **The general lesson, and the reason this question exists rather than a doc note: A
+     ROLLBACK CHAIN IS A LIST OF PLACES YOU MIGHT GO, AND NOTHING IN ITS SHAPE SAYS THEY ARE ALL
+     SAFE.** Every earlier generation here was a valid harbour, so the corpus wrote the chain as an
+     ordered list and let adjacency imply safety. **The first time a link was bad, the notation had
+     no way to say so.**
+
+105. **Two kernel builds were flashed on the same day. Can `uname -v` still tell them apart?** —
+     the sibling of Q101, and it settles the *instrument* rather than the *action*. Added because
+     T0 said, correctly for v5/v6/v7, *"both are `#1` and the date is the only field that
+     differs"* — a sentence that taught two habits which **both** fail on the v8/v9 pair. **A
+     correct answer must name both.** (a) **The date no longer discriminates**: ⛔ **THREE builds
+     are now `Wed Sep 2` — v8, v9 AND v10 — and only the TIME separates them**, so a date-scoped
+     match conflates a broken kernel with two fixes. (b) ⛔ **The `#N` counter must never be
+     ORDERED — and it is a PER-LINK counter, not per-out-dir** (`scripts/link-vmlinux.sh:328-338`
+     bumps `.version` on EVERY execution, then rebuilds `init/` on the next line, which is also why
+     a no-op relink moves the Image hash). **v10 is `#4`, v9 is `#1`, broken v8 is `#2`** — the
+     newest build carries neither the highest nor the lowest number — and sorting by it sends you
+     to flash the wrong build. ⚠ **An answer that cites v4 being `#3` as "the corpus already knew
+     this" is half right and fails**: v4 made the counter look *inconsistent*, this pair makes it
+     *actively misleading*, and only the second one costs you a flash.
+     ✅ A correct answer also knows the free, strong form of the check — **match the running stamp
+     against the banner inside the SHIPPED ZIP**
+     (`unzip -p <zip> Image.gz-dtb | gunzip -c | strings | grep -m1 'SMP PREEMPT'`), not against a
+     README: ⛔ **`V8/READ-ME-FIRST.txt` renders single-digit days two-space and would break any
+     exact match built from it, on its v4 row and its v8 row alike.** `KERNEL-V2.md` owns the
+     `uname -v` table and the byte lengths; `KERNEL-VERIFICATION-LOG.md` owns the byte-length
+     column.
+
+106. **You are about to write a block of this corpus's prose into a file from a shell. What is the
+     hazard, and what is the remedy?** — added 2026-09-02, the same day it fired twice. ⛔ **AN
+     ANSWER THAT NAMES ONLY HEREDOCS FAILS.** That was the first diagnosis, it is what `RULES.md`
+     §*Safety* corrects, and it would not have caught the second firing. **The hazard is the
+     QUOTING CONTEXT, not the construct**, and a correct answer knows all four arms: an **unquoted
+     heredoc** and a **double-quoted string** both substitute; `<<'EOF'` and a **single-quoted
+     string** are literal. **A double-quoted `echo` carrying corpus prose is exposed exactly as a
+     heredoc is.** Three further things, each load-bearing:
+     (a) ⛔ **The hazard is NOT the token that errors.** The pair that fired was caught only
+     because it was not a real command, so it failed visibly. **A backticked token that IS a
+     command substitutes silently at rc 0** and leaves the command's output where the word was.
+     **Detection was luck, not method** — and this corpus's most-backticked tokens are the
+     estate's own tools (`rogueap`, `lanmitm`, `wificonnect`, `usbgadget`, `hcxcapture`,
+     `hidrun`), so the failure is bare invocation of radio, gadget and MITM tooling, not text
+     corruption. ⚠ **Do not quote a count** — two runs an hour apart, same files and same test,
+     disagreed roughly two-fold; `RULES.md` owns why the shape is durable and the number is not.
+     (b) **The remedy has two halves and an answer giving only the first is incomplete.** *"Always
+     quote the delimiter"* is advice nobody can follow, because **you reach for the unquoted form
+     precisely to get one legitimate expansion** — and that convenience arms every backtick in the
+     payload. **Quote the delimiter AND inject the variable another way**: build the string first,
+     `sed` a placeholder afterwards, or keep the payload out of the shell entirely by reading it
+     from a file in the program that writes it.
+     (c) **The detection method is a staged draft plus `cmp` on the written region.**
+     ⛔ **A BACKTICK-BALANCE CHECK IS NOT A FALLBACK AND MUST NOT BE USED** — a substitution
+     consumes BOTH backticks, so it moves the count by an even number and **parity is preserved
+     under any number of substitutions**: the control cannot fail (`RULES.md` §*Safety*, proven by
+     arithmetic 2026-09-02, hours after this clause was written). **The valid fallback is TOKEN
+     SURVIVAL — check the damaged region's backticked tokens BY NAME.** ⚠ **And a pass that
+     appended DIRECTLY has no staged draft to `cmp` against and has therefore run no check** —
+     report it as un-contradicted, not known-clean. ⛔ **Reading it back and finding it
+     PLAUSIBLE detects nothing**, because a substitution that deletes a word or splices in a
+     command's output leaves prose that still reads. ⛔ **And on a failed `cmp`, RESTORE FROM THE
+     SNAPSHOT rather than repairing in place** — a repaired file and an undamaged one are
+     indistinguishable afterwards, which is the whole subject.
+     ⭐ **Why "name the mechanism, not the construct" is load-bearing here rather than pedantic:
+     it fired TWICE within one hour on TWO DIFFERENT CONSTRUCTS — the second time on the session
+     that was writing the rule about the first, in a double-quoted `echo` its own heredoc-scoped
+     diagnosis did not cover.** A rule keyed to the form was live and did not reach it.
+     ⚠ **WHAT THIS QUESTION CAN AND CANNOT DO — stated because the corpus's own evidence forbids
+     the stronger claim. It tests RETRIEVABILITY ONLY.** On the day it was written the corpus
+     scored **101/105** while its holder made six directional errors in the same session, several
+     of them covered by rules already filed — one filed by that same session hours earlier.
+     ⛔ **Asking this question does not prevent the hazard, and it must not be cited as though it
+     does.** Recall and compliance are different properties, and only the first is measured here.
+
+### Added 2026-09-03 (the ROM composition, and a cause welded to a measured verdict)
+
+107. **Is `/system` on this phone what a stock build for this handset ships? And which "fingerprint" is "the"
+     fingerprint?** — added because T0 called the donor-platform identity a *model **spoof*** for two months,
+     which is the right operational answer to Q55 and an **understatement of the mechanism**: the
+     platform genuinely is a different device family at a different Android version. **A correct
+     answer says NO to the first half and names the THREE-way split** — system donor-platform/Android
+     14 (SDK 34), odm donor-platform/Android 13 (SDK 33), vendor native/Android 11 (SDK 30) — **and that
+     it is the custom ROM doing what the custom ROM does, a ROM property and not an anomaly.** It must also know
+     ⛔ **there is no such thing as *"the"* fingerprint**: `ro.build.fingerprint` reads `…/<donor-codename>:14/…`
+     and `ro.system.build.fingerprint` reads `…/qssi:14/…`, both correct, **different properties**,
+     and a report quoting one as *"the"* fingerprint is unreproducible by someone reading the other.
+     ⭐ **Why it earns a question rather than a doc note: it silently bounds EVERY claim derived from
+     `/system`** — sepolicy, framework, `/system/bin`, `/apex` — and it **compounds** with the
+     separate non-recursive-bind fact already in T0. ⚠ **The vendor half is stock native *for its era
+     only*: Android 11 / sepolicy 30.0, four Android versions behind the last official native-model build.
+     An answer that says *"vendor is plausibly stock"* unqualified FAILS.**
+     `ANDROID-BRIDGE.md` §*The ROM*.
+
+108. **A measured verdict arrives with a cause attached. What have you actually been given?** —
+     added 2026-09-03 from an instance where the verdict was right and the cause was not, and the
+     cause was the part that would have been repeated. A dead SELinux type was reported as dead
+     *"because it is a versioned platform type from the 30.0 mapping"*. **The verdict re-derived
+     cleanly** (0 entries in `plat_seapp_contexts` and 0 in `vendor_seapp_contexts`); **the cause
+     did not** — the type appears **51 times in `vendor_sepolicy.cil`** and **0 times** in
+     `plat_sepolicy.cil` and **0 times in every mapping file**, while a genuine versioned type
+     (`kernel_30_0`) *is* mapped, `(typeattributeset kernel_30_0 (kernel))`. ⭐ **A correct answer
+     says: TWO claims arrived, only one carried a probe, and the `_30_0` suffix is a naming
+     convention rather than proof of provenance.** ⚠ **The re-derivation made the finding STRONGER,
+     not weaker** — the type turned out to be dead for **two** independent reasons, and the second
+     was invisible while the wrong cause stood. ⛔ **An answer that treats "re-derive the number" as
+     sufficient FAILS: the number was never in dispute.** T2 [[agent-measurements-vs-judgements]];
+     the private baseband-tap doc §9.2.
 
 ### Added 2026-11-08 (the package layer — a dependency installer that runs unattended)
 
